@@ -1,0 +1,2001 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Define categories data (unchanged)
+// Define data for categories (unchanged)
+const categories = [
+  // Row 1 (0-9)
+  { key: 'visaU', emoji: '🛃', color: 'bg-lime-100 text-lime-800 dark:bg-lime-900/60 dark:text-lime-200', content: 'Visa especial para víctimas de delitos que colaboran con autoridades.', label: 'Visa U' },
+  { key: 'asilo', emoji: '🛡️', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200', content: 'Protección para quienes han sufrido persecución.', label: 'Asilo político' },
+  { key: 'ciudadania', emoji: '🇺🇸', color: 'bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200', content: 'Proceso para obtener la nacionalidad estadounidense.', label: 'Ciudadanía' },
+  { key: 'tpsDaca', emoji: '📄', color: 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200', content: 'Programas que ofrecen protección temporal.', label: 'TPS o DACA' },
+  { key: 'trabajo', emoji: '💼', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200', content: 'Información sobre empleo y derechos laborales.', label: 'Trabajo y derechos' },
+  { key: 'vivienda', emoji: '🏠', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/60 dark:text-pink-200', content: 'Opciones de alojamiento y derechos de inquilinos.', label: 'Renta y vivienda' },
+  { key: 'saludEducacion', emoji: '❤️‍🩹', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200', content: 'Acceso a servicios de salud y educación básica.', label: 'Salud y educación' },
+  { key: 'detencion', emoji: '🛑', color: 'bg-gray-100 text-red-700 dark:bg-gray-700/60 dark:text-red-300', content: 'Qué hacer en caso de detención migratoria.', label: 'Detención y defensa legal' }, // Special case for gray bg
+  { key: 'tramites', emoji: '📂', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200', content: 'Gestión de papeles migratorios y legales.', label: 'Trámites y documentos' },
+  { key: 'ayudaComunitaria', emoji: '🤝', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200', content: 'Apoyo de organizaciones y voluntarios.', label: 'Ayuda comunitaria' },
+  // Row 2 (10-19)
+  { key: 'abusoLaboral', emoji: '⚠️', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200', content: 'Protección frente a explotación y abusos.', label: 'Abuso laboral' },
+  { key: 'educacionBecas', emoji: '🎓', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200', content: 'Oportunidades educativas y ayudas escolares.', label: 'Educación y becas' },
+  { key: 'formularios', emoji: '📝', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800/60 dark:text-slate-200', content: 'Formatos oficiales para trámites.', label: 'Formularios migratorios' },
+  { key: 'infoEstado', emoji: '📍', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200', content: 'Regulaciones locales en EE.UU.', label: 'Información por estado' },
+  { key: 'opcionesSinPapeles', emoji: '🔐', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200', content: 'Alternativas legales sin documentos migratorios.', label: 'Opciones sin papeles' },
+  { key: 'cbpOne', emoji: '🛂', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200', content: 'Agendamiento de citas con CBP.', label: 'CBP One – Citas migratorias' },
+  { key: 'appsUtiles', emoji: '📱', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200', content: 'Aplicaciones recomendadas para inmigrantes.', label: 'Apps útiles' },
+  { key: 'serviciosLegales', emoji: '⚖️', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200', content: 'Abogados y defensores migratorios cercanos.', label: 'Servicios legales' },
+  { key: 'clasesIngles', emoji: '🧑‍🏫', color: 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200', content: 'Dónde y cómo tomar clases gratuitas o pagadas.', label: 'Clases de inglés' },
+  { key: 'escuelasNinos', emoji: '🚸', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/60 dark:text-pink-200', content: 'Ayuda escolar, inscripción y derechos.', label: 'Escuelas y niños' },
+  // Row 3 (20-29)
+  { key: 'cuentaBancaria', emoji: '💳', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200', content: 'Cómo abrir cuentas aún sin seguro social.', label: 'Abrir cuenta bancaria' },
+  { key: 'transportePublico', emoji: '🚌', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200', content: 'Guías para usar el transporte y obtener pases.', label: 'Transporte público' },
+  { key: 'saludGratis', emoji: '🏥', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200', content: 'Clínicas de bajo costo o gratuitas.', label: 'Centros de salud gratis' },
+  { key: 'derechosPolicia', emoji: '👮', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700/60 dark:text-gray-200', content: 'Cómo actuar en detenciones o paradas.', label: 'Tus derechos con la policía' },
+  { key: 'traductores', emoji: '💬', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200', content: 'Herramientas para traducir y pedir ayuda.', label: 'Traductores y asistencia' },
+  { key: 'creditos', emoji: '🏦', color: 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200', content: 'Cómo acceder a microcréditos y préstamos personales.', label: 'Créditos y préstamos' },
+  { key: 'impuestos', emoji: '🧾', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200', content: 'Cómo presentar tus impuestos con o sin ITIN.', label: 'Impuestos y formularios' },
+  { key: 'asistenciaAlimentaria', emoji: '🛒', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/60 dark:text-pink-200', content: 'Accede a bancos de comida y programas de ayuda.', label: 'Asistencia alimentaria' },
+  { key: 'direccionPostal', emoji: '📬', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200', content: 'Opciones si no tienes domicilio fijo.', label: 'Dirección postal' },
+  { key: 'recursosGratuitos', emoji: '📚', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200', content: 'Sitios web y documentos útiles sin costo.', label: 'Recursos gratuitos' },
+  // Row 4 (30-39)
+  { key: 'refugios', emoji: '🛏️', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200', content: 'Lugares donde puedes dormir seguro.', label: 'Refugios temporales' },
+  { key: 'podcasts', emoji: '🎙️', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200', content: 'Programas que te informan y motivan diariamente.', label: 'Podcasts educativos' },
+  { key: 'licenciaConducir', emoji: '🚗', color: 'bg-lime-100 text-lime-800 dark:bg-lime-900/60 dark:text-lime-200', content: 'Requisitos y proceso para obtenerla en tu estado.', label: 'Licencia de conducir' },
+  { key: 'enviarDinero', emoji: '💰', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200', content: 'Formas seguras y económicas de enviar remesas.', label: 'Enviar dinero' },
+  { key: 'viajesFamilia', emoji: '✈️', color: 'bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200', content: 'Información sobre reunificación familiar y permisos de viaje.', label: 'Viajes y familia' },
+  { key: 'culturaEventos', emoji: '🎭', color: 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200', content: 'Eventos culturales y actividades comunitarias locales.', label: 'Cultura y eventos' },
+  { key: 'participacionCivica', emoji: '🗳️', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200', content: 'Formas de involucrarte en tu comunidad local.', label: 'Participación cívica' },
+  { key: 'emergenciasGenerales', emoji: '🆘', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/60 dark:text-pink-200', content: 'Números y recursos para diferentes tipos de emergencias.', label: 'Emergencias generales' },
+  { key: 'bienestarMental', emoji: '🧘', color: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/60 dark:text-fuchsia-200', content: 'Recursos para el manejo del estrés y la salud emocional.', label: 'Bienestar mental' },
+  { key: 'preguntasFrecuentes', emoji: '❓', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200', content: 'Respuestas a dudas comunes sobre inmigración.', label: 'Preguntas frecuentes' }
+];
+
+// **UPDATED**: Define data for Latin American countries with consular information structure
+// **UPDATED**: Define data for Latin American countries with consular information structure
+const latinAmericanCountries = [
+  // NOTE: Info is placeholder. Replace with real data.
+  // NOTE: Information is placeholder. Replace with actual data.
+  // Mexico
+  {
+    key: 'mx', name: 'México', flagEmoji: '🇲🇽',
+    info: 'Recursos e información consular para ciudadanos mexicanos en EE.UU.',
+    consulateInfo: {
+      website: 'https://consulmex.sre.gob.mx/fresno/', // Example: Fresno consulate
+      phone: '+1-559-233-3065', // Example phone
+      address: '7435 N Ingram Ave, Fresno, CA 93711', // Example address
+      procedures: [
+        { name: 'Pasaporte', url: 'https://consulmex.sre.gob.mx/fresno/index.php/pasaportes' },
+        { name: 'Matrícula Consular', url: 'https://consulmex.sre.gob.mx/fresno/index.php/matricula-consular' },
+        { name: 'Registro Civil', url: 'https://consulmex.sre.gob.mx/fresno/index.php/registro-civil' },
+        { name: 'Visas (para extranjeros)', url: 'https://consulmex.sre.gob.mx/fresno/index.php/visas' },
+      ],
+      finderUrl: 'https://directorio.sre.gob.mx/index.php/consulados-de-mexico-en-el-exterior' // Link to find other consulates
+    }
+  },
+  // Guatemala
+  {
+    key: 'gt', name: 'Guatemala', flagEmoji: '🇬🇹',
+    info: 'Recursos e información consular para ciudadanos guatemaltecos en EE.UU.',
+    consulateInfo: {
+      website: 'https://www.minex.gob.gt/Visor_Pagina.aspx?PaginaID=21', // General consular info page
+      phone: 'N/A', // Placeholder
+      address: 'N/A', // Placeholder
+      procedures: [
+        { name: 'Pasaporte', url: '#' }, // Placeholder URL
+        { name: 'Tarjeta Consular (ID)', url: '#' },
+        { name: 'Inscripción Nacimiento', url: '#' },
+      ],
+      finderUrl: 'https://www.minex.gob.gt/DirectorioPaises.aspx' // Directory link
+    }
+  },
+  // El Salvador
+  {
+    key: 'sv', name: 'El Salvador', flagEmoji: '🇸🇻',
+    info: 'Recursos e información consular para ciudadanos salvadoreños en EE.UU.',
+    consulateInfo: {
+      website: 'https://rree.gob.sv/', // Foreign Ministry
+      phone: 'N/A',
+      address: 'N/A',
+      procedures: [
+         { name: 'Pasaporte', url: '#' },
+         { name: 'DUI en el exterior', url: '#' },
+         { name: 'Registro Estado Familiar', url: '#' },
+      ],
+      finderUrl: 'https://rree.gob.sv/embajadas-y-consulados-de-el-salvador-en-el-mundo/'
+    }
+  },
+  // Honduras
+   {
+    key: 'hn', name: 'Honduras', flagEmoji: '🇭🇳',
+    info: 'Recursos e información consular para ciudadanos hondureños en EE.UU.',
+    consulateInfo: {
+      website: 'https://consuladohondurasenlosangeles.com/', // Example: LA Consulate
+      phone: 'N/A',
+      address: 'N/A',
+      procedures: [
+         { name: 'Pasaporte', url: '#' },
+         { name: 'Tarjeta Consular (ID)', url: '#' },
+         { name: 'Salvo Conducto', url: '#' },
+      ],
+      finderUrl: 'https://citaconsular.sreci.gob.hn/citaconsular/pages/layout/Consulados.php' // Appointment site with list
+    }
+  },
+  // Nicaragua
+  {
+    key: 'ni', name: 'Nicaragua', flagEmoji: '🇳🇮',
+    info: 'Recursos e información consular para ciudadanos nicaragüenses en EE.UU.',
+    consulateInfo: {
+        website: 'https://nicaraguaembassyusa.org/es/consular-services/', // Embassy Consular Services page
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Fe de Vida', url: '#' },
+            { name: 'Visas (para extranjeros)', url: '#' },
+        ],
+        finderUrl: '#' // Placeholder - Specific directory link might be hard to find
+    }
+  },
+  // Costa Rica
+  {
+    key: 'cr', name: 'Costa Rica', flagEmoji: '🇨🇷',
+    info: 'Recursos e información consular para ciudadanos costarricenses en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.rree.go.cr/?sec=servicios&cat=consulares', // Foreign Ministry Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Identidad', url: '#' },
+            { name: 'Registro Civil', url: '#' },
+        ],
+        finderUrl: 'https://www.rree.go.cr/?sec=servicios&cat=representaciones' // Representations directory
+    }
+  },
+  // Panamá
+  {
+    key: 'pa', name: 'Panamá', flagEmoji: '🇵🇦',
+    info: 'Recursos e información consular para ciudadanos panameños en EE.UU.',
+    consulateInfo: {
+        website: 'https://mire.gob.pa/ministerio/servicios-consulares/', // Foreign Ministry Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula', url: '#' },
+            { name: 'Salvo Conducto', url: '#' },
+        ],
+        finderUrl: 'https://mire.gob.pa/ministerio/embajadas-y-consulados-de-panama-en-el-exterior/' // Directory
+    }
+  },
+  // Colombia
+  {
+    key: 'co', name: 'Colombia', flagEmoji: '🇨🇴',
+    info: 'Recursos e información consular para ciudadanos colombianos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.cancilleria.gov.co/tramites_servicios/tramites_servicios_exterior', // Chancellery Services Abroad
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Ciudadanía', url: '#' },
+            { name: 'Registro Civil', url: '#' },
+            { name: 'Visas (para extranjeros)', url: '#' },
+        ],
+        finderUrl: 'https://tramites.cancilleria.gov.co/ApostillaLegalizacion/directorio/misionesExterior.aspx' // Directory of Missions
+    }
+  },
+  // Venezuela
+  {
+    key: 've', name: 'Venezuela', flagEmoji: '🇻🇪',
+    info: 'Recursos e información consular para ciudadanos venezolanos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.embajadave.org/', // Embassy in USA (Note: Diplomatic relations context)
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte (SAIME)', url: '#' },
+            { name: 'Prórroga de Pasaporte', url: '#' },
+            { name: 'Registro Consular', url: '#' },
+        ],
+        finderUrl: '#' // Directory might be complex due to current situation
+    }
+  },
+  // Ecuador
+  {
+    key: 'ec', name: 'Ecuador', flagEmoji: '🇪🇨',
+    info: 'Recursos e información consular para ciudadanos ecuatorianos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.cancilleria.gob.ec/servicios-consulares-en-linea/', // Online Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula', url: '#' },
+            { name: 'Poderes', url: '#' },
+        ],
+        finderUrl: 'https://www.cancilleria.gob.ec/mapa-de-consulados-y-embajadas/' // Map of Consulates/Embassies
+    }
+  },
+  // Perú
+  {
+    key: 'pe', name: 'Perú', flagEmoji: '🇵🇪',
+    info: 'Recursos e información consular para ciudadanos peruanos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.gob.pe/consulados', // General Consulate Portal
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte Biométrico', url: '#' },
+            { name: 'DNI', url: '#' },
+            { name: 'Registro Civil', url: '#' },
+        ],
+        finderUrl: 'https://www.gob.pe/institucion/rree/sedes' // Directory (may need filtering)
+    }
+  },
+  // Bolivia
+  {
+    key: 'bo', name: 'Bolivia', flagEmoji: '🇧🇴',
+    info: 'Recursos e información consular para ciudadanos bolivianos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.cancilleria.gob.bo/webmre/servicios/servicios-consulares', // Chancellery Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Identidad (SEGIP)', url: '#' },
+            { name: 'Certificados', url: '#' },
+        ],
+        finderUrl: 'https://www.cancilleria.gob.bo/webmre/representacion/consulados' // Consulates Directory
+    }
+  },
+  // Paraguay
+  {
+    key: 'py', name: 'Paraguay', flagEmoji: '🇵🇾',
+    info: 'Recursos e información consular para ciudadanos paraguayos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.mre.gov.py/Sitios/Home/Index/consulpar/SERVICIOS', // Foreign Ministry Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Identidad', url: '#' },
+            { name: 'Certificado de Vida y Residencia', url: '#' },
+        ],
+        finderUrl: 'https://www.mre.gov.py/Sitios/Home/Index/consulpar/CONSULADOS-DEL-EXTERIOR' // Consulates Directory
+    }
+  },
+  // Uruguay
+  {
+    key: 'uy', name: 'Uruguay', flagEmoji: '🇺🇾',
+    info: 'Recursos e información consular para ciudadanos uruguayos en EE.UU.',
+    consulateInfo: {
+        website: 'https://www.gub.uy/ministerio-relaciones-exteriores/tramites-servicios/servicios/tramites-consulares', // Gov Portal Consular Procedures
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Identidad', url: '#' },
+            { name: 'Certificado de Existencia', url: '#' },
+        ],
+        finderUrl: 'https://mapaconsular.mrree.gub.uy/' // Consular Map/Directory
+    }
+  },
+  // Argentina
+  {
+    key: 'ar', name: 'Argentina', flagEmoji: '🇦🇷',
+    info: 'Recursos e información consular para ciudadanos argentinos en EE.UU.',
+    consulateInfo: {
+        website: 'https://cancilleria.gob.ar/es/servicios/servicios-para-argentinos-en-el-exterior', // Chancellery Services Abroad
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'DNI', url: '#' },
+            { name: 'Certificado de Supervivencia', url: '#' },
+        ],
+        finderUrl: 'https://cancilleria.gob.ar/es/representaciones' // Representations Directory
+    }
+  },
+  // Chile
+  {
+    key: 'cl', name: 'Chile', flagEmoji: '🇨🇱',
+    info: 'Recursos e información consular para ciudadanos chilenos en EE.UU.',
+    consulateInfo: {
+        website: 'https://serviciosconsulares.cl/', // Consular Services Portal
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula de Identidad', url: '#' },
+            { name: 'Clave Única', url: '#' },
+        ],
+        finderUrl: 'https://chile.gob.cl/chile/en/consulados' // Consulates Directory
+    }
+  },
+  // Brasil
+  {
+    key: 'br', name: 'Brasil', flagEmoji: '🇧🇷',
+    info: 'Recursos e información consular para ciudadanos brasileños en EE.UU. (portugués/inglés)',
+    consulateInfo: {
+        website: 'https://www.gov.br/mre/pt-br/assuntos/portal-consular', // Consular Portal (gov.br)
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Passaporte', url: '#' },
+            { name: 'CPF', url: '#' },
+            { name: 'Registro Civil', url: '#' },
+        ],
+        finderUrl: 'https://www.gov.br/mre/pt-br/assuntos/portal-consular/reparticoes-consulares-do-brasil' // Consular Offices Directory
+    }
+  },
+  // Cuba
+  {
+    key: 'cu', name: 'Cuba', flagEmoji: '🇨🇺',
+    info: 'Recursos e información consular para ciudadanos cubanos en EE.UU.',
+    consulateInfo: {
+        website: 'http://misiones.cubaminrex.cu/es/eeuu/servicios-consulares', // Embassy Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Prórroga de Estancia', url: '#' },
+            { name: 'Visas', url: '#' },
+        ],
+        finderUrl: '#' // Limited consular presence, main embassy likely point of contact
+    }
+  },
+  // República Dominicana
+  {
+    key: 'do', name: 'Rep. Dominicana', flagEmoji: '🇩🇴',
+    info: 'Recursos e información consular para ciudadanos dominicanos en EE.UU.',
+    consulateInfo: {
+        website: 'https://mirex.gob.do/servicios/consulares/', // Foreign Ministry Consular Services
+        phone: 'N/A',
+        address: 'N/A',
+        procedures: [
+            { name: 'Pasaporte', url: '#' },
+            { name: 'Cédula', url: '#' },
+            { name: 'Actos Notariales', url: '#' },
+        ],
+        finderUrl: 'https://mirex.gob.do/servicios/directorio/embajadas' // Embassy/Consulate Directory
+    }
+  },
+  // Puerto Rico (US Territory)
+  {
+    key: 'pr', name: 'Puerto Rico', flagEmoji: '🇵🇷',
+    info: 'Información relevante para ciudadanos de Puerto Rico (Territorio de EE.UU.). No aplica información consular extranjera.',
+    consulateInfo: null // No foreign consulates in the typical sense
+  },
+];
+
+
+// Informative phrases data (unchanged)
+// Define data for informative phrases (unchanged)
+const informativePhrases = [
+    "Tienes derecho a permanecer en silencio si te detiene la policía.",
+    "Guarda el número de un abogado de inmigración de confianza.",
+    "No firmes ningún documento que no entiendas sin consultar a un abogado.",
+    "Busca organizaciones locales que ofrezcan ayuda legal gratuita o de bajo costo.",
+    "Conoce tus derechos laborales: tienes derecho a un salario justo y condiciones seguras.",
+    "El asilo es una protección para quienes temen regresar a su país por persecución.",
+    "La Visa U es para víctimas de ciertos crímenes que colaboran con las autoridades.",
+    "Infórmate sobre los requisitos para el TPS o DACA si podrías calificar.",
+    "Existen recursos comunitarios para encontrar vivienda temporal o asistencia.",
+    "Hay clínicas de salud comunitarias que ofrecen servicios a bajo costo o gratis.",
+    "Tus hijos tienen derecho a inscribirse en la escuela pública sin importar tu estatus.",
+    "Aprender inglés puede abrirte muchas puertas; busca clases gratuitas en tu área.",
+    "Puedes abrir una cuenta bancaria en algunos bancos usando tu ITIN o pasaporte.",
+    "Documenta cualquier incidente de abuso laboral y busca ayuda legal.",
+    "Mantén copias de todos tus documentos importantes en un lugar seguro.",
+    "Si eres detenido por ICE, tienes derecho a llamar a tu consulado.",
+    "La 'carga pública' puede afectar algunas solicitudes de residencia permanente.",
+    "Consulta fuentes oficiales como USCIS.gov para información migratoria precisa.",
+    "Existen programas de asistencia alimentaria como SNAP o bancos de comida locales.",
+    "Infórmate sobre cómo obtener una licencia de conducir en tu estado, si es posible.",
+    "Participa en talleres informativos sobre tus derechos y opciones.",
+    "Crea un plan de emergencia familiar en caso de separación.",
+    "No compartas información personal sensible con desconocidos.",
+    "La violencia doméstica es un crimen; busca ayuda si estás en una situación de abuso.",
+    "Cuida tu salud mental; busca grupos de apoyo o consejería si lo necesitas."
+];
+
+// External links map (unchanged)
+// Define map for external links (unchanged)
+const extraLinksMap = {
+  'Visa U': [ { url: 'https://www.uscis.gov/es/programas-humanitarios/victimas-de-actos-criminales/visa-u-para-victimas-de-actos-criminales', description: 'Información oficial de USCIS sobre la Visa U.' }, { url: 'https://www.womenslaw.org/es/info/inmigracion/visa-u', description: 'Guía detallada sobre la Visa U para víctimas.' }, { url: 'https://cliniclegal.org/resources/asylum-and-special-immigrant-visas/u-visa', description: 'Recursos legais de CLINIC sobre la Visa U.' } ],
+  'Asilo político': [ { url: 'https://www.uscis.gov/es/programas-humanitarios/refugiados-y-asilo/asilo', description: 'Proceso de solicitud de asilo en EE.UU. (USCIS).' }, { url: 'https://www.justice.gov/eoir/espanol-asylum-fact-sheet', description: 'Hoja informativa sobre asilo del Departamento de Justicia.' }, { url: 'https://www.unhcr.org/es/que-hacemos/proteger-los-derechos-humanos/asilo-y-migracion', description: 'Información sobre asilo y migración de ACNUR.' } ],
+  'Ciudadanía': [ { url: 'https://www.uscis.gov/es/ciudadania/ciudadania-estadounidense', description: 'Guía oficial de USCIS para obtener la ciudadanía.' }, { url: 'https://www.usa.gov/es/ciudadania-estadounidense-e-inmigracion', description: 'Recursos del gobierno sobre ciudadanía e inmigración.' }, { url: 'https://www.consumerfinance.gov/es/practicar-la-ciudadania/', description: 'Herramientas para prepararse para el examen de ciudadanía.' } ],
+  'TPS o DACA': [ { url: 'https://www.uscis.gov/es/programas-humanitarios/estatus-de-proteccion-temporal', description: 'Información oficial sobre el Estatus de Protección Temporal (TPS).' }, { url: 'https://www.uscis.gov/es/DACA', description: 'Detalles sobre la Acción Diferida (DACA) de USCIS.' }, { url: 'https://www.informedimmigrant.com/guides/daca-es/', description: 'Guías y recursos actualizados sobre DACA.' } ],
+  'Trabajo y derechos': [ { url: 'https://www.dol.gov/general/topic/spanish-speaking-audience', description: 'Recursos laborales del Departamento de Trabajo (DOL).' }, { url: 'https://www.worker.gov/es/', description: 'Información sobre derechos y protecciones laborales.' }, { url: 'https://www.eeoc.gov/es/select-task-force-study-harassment-workplace', description: 'Recursos sobre acoso y discriminación laboral (EEOC).' } ],
+  'Renta y vivienda': [ { url: 'https://www.hud.gov/espanol', description: 'Información sobre vivienda y asistencia del HUD.' }, { url: 'https://www.consumerfinance.gov/es/coronavirus/informacion-sobre-vivienda/', description: 'Ayuda con pagos de hipoteca y alquiler (CFPB).' }, { url: 'https://www.usa.gov/es/buscar-ayuda-vivienda', description: 'Portal del gobierno para encontrar ayuda de vivienda.' } ],
+  'Salud y educación': [ { url: 'https://www.cuidadodesalud.gov/es/', description: 'Mercado de seguros médicos oficial.' }, { url: 'https://findahealthcenter.hrsa.gov/?zip=&state=OR&city=Hillsboro&fd=0&languages=Spanish&services=', description: 'Encuentra centros de salud comunitarios cercanos.' }, { url: 'https://www.usa.gov/es/educacion', description: 'Recursos educativos del gobierno de EE.UU.' } ],
+  'Detención y defensa legal': [ { url: 'https://www.aclu.org/know-your-rights/que-hacer-si-lo-detiene-la-policia-los-agentes-de-inmigracion-o-el-fbi/', description: 'Conoce tus derechos si eres detenido (ACLU).' }, { url: 'https://www.immigrationadvocates.org/nonprofit/legaldirectory/', description: 'Directorio de abogados de inmigración gratuitos o de bajo costo.' }, { url: 'https://www.justice.gov/eoir/list-pro-bono-legal-service-providers', description: 'Lista oficial de proveedores legales pro bono.' } ],
+  'Trámites y documentos': [ { url: 'https://www.uscis.gov/es/formularios', description: 'Encuentra todos los formularios de USCIS.' }, { url: 'https://www.usa.gov/es/agencias-federales/servicio-de-ciudadania-e-inmigracion-de-estados-unidos', description: 'Información sobre USCIS en USA.gov.' }, { url: 'https://travel.state.gov/content/travel/es/pasaportes.html', description: 'Información sobre pasaportes del Departamento de Estado.' } ],
+  'Ayuda comunitaria': [ { url: 'https://www.211info.org/es/', description: 'Conecta con servicios sociales y de salud (ej. 211).' }, { url: 'https://www.uniteus.com/es/', description: 'Red de coordinación de servicios comunitarios.' }, { url: 'https://findhelp.org/', description: 'Busca ayuda local por código postal (comida, vivienda, etc.).' } ],
+  'Abuso laboral': [ { url: 'https://www.dol.gov/agencies/whd/contact/complaints', description: 'Cómo presentar una queja por salarios o condiciones laborales (DOL).' }, { url: 'https://www.osha.gov/workers/file-complaint', description: 'Reportar condiciones de trabajo inseguras (OSHA).' }, { url: 'https://www.nationalpartnership.org/our-work/resources/economic-justice/fair-pay/espanol-know-your-rights-equal-pay.pdf', description: 'Información sobre igualdad salarial.' } ],
+  'Educación y becas': [ { url: 'https://studentaid.gov/es/', description: 'Ayuda federal para estudiantes (FAFSA).' }, { url: 'https://mydocumentedlife.org/category/high-school-scholarships/', description: 'Recursos y becas para estudiantes indocumentados.' }, { url: 'https://www.thedream.us/scholarships/', description: 'Becas para Dreamers a nivel universitario.' } ],
+  'Formularios migratorios': [ { url: 'https://www.uscis.gov/es/formularios/todos-los-formularios', description: 'Acceso directo a todos los formularios oficiales de USCIS.' }, { url: 'https://www.ilrc.org/es/form-help', description: 'Ayuda para completar formularios de inmigración (ILRC).' } ],
+  'Información por estado': [ { url: 'https://www.usa.gov/es/estados-y-territorios', description: 'Encuentra sitios web oficiales de cada estado.' }, { url: 'https://www.nilc.org/issues/drivers-licenses/', description: 'Leyes sobre licencias de conducir para inmigrantes por estado.' } ],
+  'Opciones sin papeles': [ { url: 'https://www.informedimmigrant.com/guides/conozca-sus-derechos-es/', description: 'Guía sobre derechos para inmigrantes indocumentados.' }, { url: 'https://www.nilc.org/issues/economic-support/overview-immigrant-eligibility-fed-programs/', description: 'Elegibilidad de inmigrantes para programas federales.' } ],
+  'CBP One – Citas migratorias': [ { url: 'https://www.cbp.gov/about/mobile-apps-directory/cbpone', description: 'Información y descarga de la app CBP One.' }, { url: 'https://www.humanrightsfirst.org/resource/informaci-n-sobre-cbp-one-para-solicitantes-de-asilo', description: 'Guía sobre el uso de CBP One para solicitar asilo.' } ],
+  'Apps útiles': [ { url: 'https://www.usa.gov/es/aplicaciones-moviles', description: 'Directorio de apps móviles del gobierno de EE.UU.' }, { url: 'https://www.remitly.com/es/es', description: 'Ejemplo de app para enviar dinero.' }, { url: 'https://www.duolingo.com/', description: 'Ejemplo de app para aprender inglés.' } ],
+  'Servicios legales': [ { url: 'https://www.immigrationadvocates.org/nonprofit/legaldirectory/', description: 'Busca abogados de inmigración gratuitos o de bajo costo.' }, { url: 'https://www.justice.gov/eoir/list-pro-bono-legal-service-providers', description: 'Lista oficial de proveedores legales pro bono por estado.' }, { url: 'https://www.ailalawyer.com/', description: 'Directorio de abogados de la Asociación Americana de Abogados de Inmigración (AILA).' } ],
+  'Clases de inglés': [ { url: 'https://www.usalearns.org/es', description: 'Cursos de inglés gratuitos en línea.' }, { url: 'https://www.usa.gov/es/aprender-ingles', description: 'Recursos del gobierno para aprender inglés.' }, { description: 'Busca "clases de inglés ESL gratis" en tu biblioteca pública local.', url: '#' } ],
+  'Escuelas y niños': [ { url: 'https://www2.ed.gov/es/parents/landing.html', description: 'Recursos para padres del Departamento de Educación.' }, { url: 'https://www.colorincolorado.org/es/familias', description: 'Apoyo bilingüe para familias sobre educación.' }, { url: 'https://protectingimmigrantfamilies.org/know-your-rights/', description: 'Derechos de familias inmigrantes en escuelas y servicios.' } ],
+  'Abrir cuenta bancaria': [ { url: 'https://www.consumerfinance.gov/es/obtener-respuestas/puedo-abrir-una-cuenta-bancaria-si-soy-inmigrante-con-un-numero-itin-en-vez-de-un-numero-de-seguro-social-ssn-es-2115/', description: 'Información sobre abrir cuentas con ITIN (CFPB).' }, { url: 'https://www.fdic.gov/resources/consumers/consumer-news/spanish/2021-08.html', description: 'Consejos para abrir cuentas bancarias seguras (FDIC).' }, { url: 'https://www.ncua.gov/es/ayuda', description: 'Información sobre Cooperativas de Crédito (Credit Unions).' } ],
+  'Transporte público': [ { url: 'https://trimet.org/spanish/', description: 'Ejemplo: Información de transporte público en Portland/Hillsboro.' }, { url: 'https://www.transit.app/es', description: 'App popular para planificar rutas de transporte público.' }, { description: 'Busca la autoridad de transporte de tu ciudad o condado.', url: '#' } ],
+  'Centros de salud gratis': [ { url: 'https://findahealthcenter.hrsa.gov/?zip=&state=OR&city=Hillsboro&fd=0&languages=Spanish&services=', description: 'Encuentra centros de salud financiados federalmente.' }, { url: 'https://freeclinicdirectory.org/oregon_care.html', description: 'Directorio de clínicas gratuitas (ejemplo para Oregon).' }, { url: 'https://www.needy meds.org/es/free_clinics.taf', description: 'Buscador de clínicas de bajo costo o gratuitas.' } ],
+  'Tus derechos con la policía': [ { url: 'https://www.aclu.org/know-your-rights/que-hacer-si-lo-detiene-la-policia-los-agentes-de-inmigracion-o-el-fbi/', description: 'Guía detallada sobre tus derechos al ser detenido (ACLU).' }, { url: 'https://www.ilrc.org/es/red-cards', description: 'Tarjetas de derechos para mostrar a oficiales (ILRC).' } ],
+  'Traductores y asistencia': [ { url: 'https://translate.google.com/', description: 'Traductor en línea gratuito (Google).' }, { url: 'https://www.deepl.com/translator', description: 'Otra opción de traductor en línea (DeepL).' }, { description: 'Busca servicios de interpretación comunitarios en tu área.', url: '#' } ],
+  'Créditos y préstamos': [ { url: 'https://www.consumerfinance.gov/es/enviar-dinero/', description: 'Información sobre finanzas personales y crédito (CFPB).' }, { url: 'https://www.missionassetfund.org/es/programas-de-prestamos/', description: 'Préstamos para construir crédito (MAF).' }, { url: 'https://www.oportun.com/es/', description: 'Ejemplo de compañía que ofrece préstamos personales.' } ],
+  'Impuestos y formularios': [ { url: 'https://www.irs.gov/es/individuals/international-taxpayers/taxpayer-identification-numbers-tin', description: 'Información sobre el número ITIN del IRS.' }, { url: 'https://www.irs.gov/es/filing/free-file-do-your-federal-taxes-for-free', description: 'Opciones para declarar impuestos gratis (IRS Free File).' }, { url: 'https://www.getyourrefund.org/es', description: 'Ayuda gratuita para la preparación de impuestos.' } ],
+  'Asistencia alimentaria': [ { url: 'https://www.fns.usda.gov/es/snap/solicite', description: 'Información oficial sobre el programa SNAP (cupones de alimentos).' }, { url: 'https://www.feedingamerica.org/es/find-your-local-foodbank', description: 'Encuentra bancos de comida locales.' }, { url: 'https://oregonfoodbank.org/es/find-food/', description: 'Ejemplo: Buscador de asistencia alimentaria en Oregon.' } ],
+  'Dirección postal': [ { url: 'https://www.usps.com/manage/forward-mail.htm', description: 'Cómo reenviar correo si te mudas (USPS).' }, { url: 'https://faq.usps.com/s/article/PO-Box-The-Basics', description: 'Información sobre apartados postales (PO Box).' }, { description: 'Considera servicios de buzón virtual si necesitas una dirección estable.', url: '#' } ],
+  'Recursos gratuitos': [ { url: 'https://www.usa.gov/es', description: 'Portal oficial del gobierno de EE.UU. con información diversa.' }, { url: 'https://www.consumerfinance.gov/es/', description: 'Recursos sobre finanzas personales del CFPB.' }, { description: 'Visita tu biblioteca pública local para acceso a internet, libros y más.', url: '#' } ],
+  'Refugios temporales': [ { url: 'https://www.hudexchange.info/housing-and-homeless-assistance/', description: 'Recursos para personas sin hogar del HUD.' }, { url: 'https://www.211info.org/es/shelter/', description: 'Busca refugios y asistencia de vivienda (ej. 211).' }, { url: 'https://www.samhsa.gov/homelessness-programs-resources/hpr-resources/urgent-community-response', description: 'Recursos urgentes para personas sin hogar.' } ],
+  'Podcasts educativos': [ { url: 'https://www.npr.org/podcasts/510317/radio-ambulante', description: 'Podcast en español con historias latinoamericanas.' }, { url: '#', description: 'Ejemplo: Podcast sobre finanzas personales en español.' }, { description: 'Busca podcasts sobre "inmigración USA", "aprender inglés", etc.', url: '#' } ],
+  'Licencia de conducir': [ { url: 'https://www.usa.gov/es/renovar-licencia-conducir', description: 'Información general sobre licencias de conducir.' }, { url: 'https://www.nilc.org/issues/drivers-licenses/', description: 'Leyes sobre licencias para inmigrantes por estado (NILC).' }, { url: 'https://www.oregon.gov/odot/dmv/pages/driverid/licenseget.aspx', description: 'Ejemplo: Cómo obtener licencia en Oregon.' } ],
+  'Enviar dinero': [ { url: 'https://www.consumerfinance.gov/es/enviar-dinero/', description: 'Consejos para enviar dinero de forma segura (CFPB).' }, { url: 'https://www.remitly.com/es/es', description: 'Ejemplo de servicio de envío de remesas.' }, { url: 'https://wise.com/es/', description: 'Otro ejemplo de servicio de envío de dinero.' } ],
+  'Viajes y familia': [ { url: 'https://www.uscis.gov/es/tarjeta-verde/despues-de-concederle-la-tarjeta-verde/viajes-internacionales-como-residente-permanente', description: 'Información sobre viajar fuera de EE.UU. como residente.' }, { url: 'https://www.uscis.gov/es/familia', description: 'Procesos de inmigración basados en la familia (USCIS).' }, { url: 'https://travel.state.gov/content/travel/en/us-visas/immigrate/family-immigration.html', description: 'Visas familiares del Departamento de Estado.' } ],
+  'Cultura y eventos': [ { url: 'https://www.hillsboro-oregon.gov/our-city/departments/parks-recreation/classes-activities', description: 'Ejemplo: Actividades y eventos en Hillsboro, OR.' }, { description: 'Busca el sitio web de tu ciudad o condado para eventos locales.', url: '#' }, { description: 'Consulta el calendario de tu biblioteca pública local.', url: '#' } ],
+  'Participación cívica': [ { url: 'https://www.usa.gov/es/elecciones', description: 'Información sobre elecciones y votación (para ciudadanos).' }, { url: 'https://www.uscis.gov/es/ciudadania/educacion-para-la-ciudadania', description: 'Recursos de educación cívica para la ciudadanía.' }, { description: 'Busca organizaciones locales de voluntariado o defensa de derechos.', url: '#' } ],
+  'Emergencias generales': [ { url: 'https://www.ready.gov/es', description: 'Prepárate para desastres y emergencias.' }, { url: 'https://www.redcross.org/get-help.html', description: 'Ayuda en caso de desastres de la Cruz Roja.' }, { description: 'Llama al 911 para emergencias médicas, de policía o bomberos.', url: 'tel:911' } ],
+  'Bienestar mental': [ { url: 'https://www.nimh.nih.gov/health/topics/espanol', description: 'Información sobre salud mental del NIMH.' }, { url: 'https://www.samhsa.gov/find-help/national-helpline', description: 'Línea nacional de ayuda para salud mental y abuso de sustancias.' }, { url: 'https://findtreatment.gov/', description: 'Encuentra tratamiento para salud mental y adicciones.' } ],
+  'Preguntas frecuentes': [ { url: 'https://www.uscis.gov/es/herramientas/preguntas-frecuentes', description: 'Preguntas frecuentes oficiales de USCIS.' }, { url: 'https://www.usa.gov/es/preguntas-frecuentes-inmigracion', description: 'Preguntas frecuentes sobre inmigración en USA.gov.' } ],
+};
+
+
+// --- Reusable Carousel Component ---
+// --- Reusable Category Carousel Component ---
+const CategoryCarousel = ({ categorySlice, onCategoryClick }) => {
+    // Calculate animation duration based on the number of categories
+    const animationDuration = (categorySlice.length || 10) * 2.5;
+    // Duplicate categories for seamless looping
+    const doubledCategories = [...categorySlice, ...categorySlice];
+    // Return null if no categories are provided
+    if (!categorySlice || categorySlice.length === 0) return null;
+    return (
+        <div className="w-full overflow-hidden py-3 relative group">
+            {/* Motion div for horizontal scrolling animation */}
+            <motion.div
+                className="flex space-x-3"
+                style={{ width: 'max-content' }}
+                animate={{ x: [0, '-50%'] }} // Animate x position from 0 to -50%
+                transition={{ ease: 'linear', duration: animationDuration, repeat: Infinity, repeatType: 'loop' }} // Linear animation, infinite loop
+            >
+                {/* Map through doubled categories to create buttons */}
+                {doubledCategories.map((cat, idx) => (
+                    <motion.button
+                        key={`${cat.key}-carousel-${idx}`}
+                        whileHover={{ scale: 1.06, y: -3, transition: { duration: 0.15 } }} // Hover animation
+                        whileTap={{ scale: 0.96 }} // Tap animation
+                        onClick={() => onCategoryClick(cat)} // Click handler
+                        className={`min-w-[90px] sm:min-w-[100px] flex-shrink-0 rounded-lg shadow-md px-3 py-2 flex flex-col items-center justify-center text-xs transition-all duration-150 ${cat.color} hover:shadow-lg hover:brightness-110 dark:hover:brightness-125 dark:hover:shadow-gray-700/50`}
+                        style={{ touchAction: 'pan-y' }} // Allow vertical scrolling on touch devices
+                    >
+                        {/* Emoji */}
+                        <span className="text-2xl sm:text-3xl mb-1 pointer-events-none">{cat.emoji}</span>
+                        {/* Label */}
+                        <span className="text-[11px] sm:text-xs font-medium text-center pointer-events-none">{cat.label}</span>
+                    </motion.button>
+                ))}
+            </motion.div>
+        </div>
+    );
+};
+
+// Flag Carousel Component
+// --- Reusable Flag Carousel Component ---
+const FlagCarousel = ({ countries, onFlagClick }) => {
+    // Calculate animation duration based on the number of countries
+    const animationDuration = (countries.length || 10) * 3;
+    // Duplicate countries for seamless looping
+    const doubledCountries = [...countries, ...countries];
+    // Return null if no countries are provided
+    if (!countries || countries.length === 0) return null;
+    return (
+        <div className="w-full overflow-hidden py-3 relative group border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850">
+            {/* Motion div for horizontal scrolling animation */}
+            <motion.div
+                className="flex space-x-3 px-3"
+                style={{ width: 'max-content' }}
+                animate={{ x: [0, '-50%'] }} // Animate x position from 0 to -50%
+                transition={{ ease: 'linear', duration: animationDuration, repeat: Infinity, repeatType: 'loop' }} // Linear animation, infinite loop
+            >
+                {/* Map through doubled countries to create buttons */}
+                {doubledCountries.map((country, idx) => (
+                    <motion.button
+                        key={`${country.key}-flag-carousel-${idx}`}
+                        whileHover={{ scale: 1.08, y: -2, transition: { duration: 0.15 } }} // Hover animation
+                        whileTap={{ scale: 0.95 }} // Tap animation
+                        onClick={() => onFlagClick(country)} // Click handler
+                        className={`min-w-[60px] sm:min-w-[70px] flex-shrink-0 rounded-md shadow-sm px-2 py-1.5 flex flex-col items-center justify-center text-xs transition-all duration-150 bg-white dark:bg-gray-700 hover:shadow-md hover:brightness-105 dark:hover:brightness-115`}
+                        style={{ touchAction: 'pan-y' }} // Allow vertical scrolling on touch devices
+                        title={country.name} // Tooltip with country name
+                    >
+                        {/* Flag Emoji */}
+                        <span className="text-3xl sm:text-4xl mb-0.5 pointer-events-none">{country.flagEmoji}</span>
+                    </motion.button>
+                ))}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// --- Page Components ---
+// --- Home Page Component ---
+const HomePage = ({ categories, onCategoryClick }) => {
+    return (
+        <div className="p-5 space-y-2">
+            {/* Render four rows of category carousels */}
+            <CategoryCarousel categorySlice={categories.slice(0, 10)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(10, 20)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(20, 30)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(30, 40)} onCategoryClick={onCategoryClick} />
+        </div>
+    );
+};
+
+// --- Categories Page Component (Placeholder) ---
+const CategoriesPage = () => (
+    <div className="p-6">
+        <h1 className="text-3xl font-bold mb-5 dark:text-white">Categorías</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-base">
+            Selecciona la pestaña 'Categorías' abajo para explorar los temas.
+        </p>
+    </div>
+);
+
+// Assistant Page Component (unchanged)
+// --- Assistant Page Component ---
+const AssistantPage = ({ chatHistory, inputText, setInputText, handleSendMessage, isAssistantLoading, darkMode, themeColor, initialAssistantGreeting }) => {
+    // Refs for scrolling and chat container
+    const messagesEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
+
+    // CSS classes for chat bubbles and send button based on theme and dark mode
+    const userBubbleClasses = `bg-blue-600 text-white dark:bg-blue-500 dark:text-white`;
+    const assistantBubbleClasses = `${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-gray-200 text-gray-800'}`;
+    const themeSendButtonClasses = { blue: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500', red: 'bg-red-600 hover:bg-red-700 focus:ring-red-500', green: 'bg-green-600 hover:bg-green-700 focus:ring-green-500', yellow: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500', purple: 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500', pink: 'bg-pink-600 hover:bg-pink-700 focus:ring-pink-500', orange: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500', teal: 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500', indigo: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500', gray: 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-500', lime: 'bg-lime-600 hover:bg-lime-700 focus:ring-lime-500', cyan: 'bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500' };
+    const currentSendButtonBg = themeSendButtonClasses[themeColor] || 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+
+    // Check if it's a new chat (only contains the initial greeting)
+    const isNewChat = chatHistory.length === 1 && chatHistory[0].content === initialAssistantGreeting;
+
+    // Welcome messages for new chat
+    const welcomeTitle = "¡Hola! Soy Epicentrum Assistant.";
+    const welcomeMessage = "Sé que navegar el camino en un nuevo país puede ser complicado. Mi propósito es ser tu guía y ayudarte a encontrar respuestas claras sobre trámites, derechos, recursos y mucho más. Pregúntame lo que necesites.";
+    const promptMessage = "Escribe tu pregunta abajo para comenzar.";
+
+    // Framer Motion variants for animations
+    const containerVariants = { hidden: { opacity: 0 }, visible: (i = 1) => ({ opacity: 1, transition: { staggerChildren: 0.04, delayChildren: 0.2 * i }, }), };
+    const letterVariants = { hidden: { opacity: 0, y: 10, transition: { type: 'spring', damping: 12, stiffness: 200 } }, visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 12, stiffness: 200 } } };
+
+    // Effect to scroll to the bottom of the chat on new messages
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [chatHistory]);
+
+    // Handle Enter key press to send message
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-full">
+            {/* Chat messages container */}
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* Welcome message for new chats */}
+                {isNewChat && (
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut", delay: 0.1 } } }}
+                        className={`p-5 rounded-xl shadow-md mb-5 ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+                    >
+                        {/* Animated welcome title */}
+                        <motion.h2
+                            className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            aria-label={welcomeTitle}
+                        >
+                            {welcomeTitle.split("").map((char, index) => (
+                                <motion.span key={index} variants={letterVariants} className="inline-block">
+                                    {char === " " ? "\u00A0" : char}
+                                </motion.span>
+                            ))}
+                            <span className="inline-block ml-1.5">👋</span>
+                        </motion.h2>
+                        {/* Animated welcome message */}
+                        <motion.p
+                            className={`text-base mb-2 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            aria-label={welcomeMessage}
+                        >
+                            {welcomeMessage.split("").map((char, index) => (
+                                <motion.span key={index} variants={letterVariants} className="inline-block">
+                                    {char === " " ? "\u00A0" : char}
+                                </motion.span>
+                            ))}
+                        </motion.p>
+                        {/* Animated prompt message */}
+                        <motion.p
+                            className={`text-base mt-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                            variants={containerVariants}
+                            custom={2}
+                            initial="hidden"
+                            animate="visible"
+                            aria-label={promptMessage}
+                        >
+                            {promptMessage.split("").map((char, index) => (
+                                <motion.span key={index} variants={letterVariants} className="inline-block">
+                                    {char === " " ? "\u00A0" : char}
+                                </motion.span>
+                            ))}
+                        </motion.p>
+                    </motion.div>
+                )}
+                {/* Map through chat history to display messages */}
+                {chatHistory.map((message, index) => {
+                    // Skip the initial greeting if it's a new chat
+                    if (isNewChat && index === 0) {
+                        return null;
+                    }
+                    return (
+                        <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className={`rounded-xl px-4 py-2.5 max-w-sm lg:max-w-lg shadow-md ${
+                                    message.type === 'user' ? userBubbleClasses : assistantBubbleClasses
+                                }`}
+                            >
+                                <p className="text-base whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                            </motion.div>
+                        </div>
+                    );
+                })}
+                {/* Loading indicator when assistant is typing */}
+                {isAssistantLoading && (
+                    <div className="flex justify-start">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className={`rounded-xl px-4 py-2.5 max-w-xs lg:max-w-md shadow-md ${assistantBubbleClasses}`}
+                        >
+                            <div className="flex space-x-1.5 items-center h-5">
+                                {/* Animated dots */}
+                                <motion.div className="w-2 h-2 bg-current rounded-full" animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}></motion.div>
+                                <motion.div className="w-2 h-2 bg-current rounded-full" animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}></motion.div>
+                                <motion.div className="w-2 h-2 bg-current rounded-full" animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}></motion.div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+                {/* Empty div to ensure scrolling to the bottom */}
+                <div ref={messagesEndRef} />
+            </div>
+            {/* Chat input area */}
+            <div className={`p-4 border-t ${darkMode ? 'bg-gray-850 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+                <div className="flex items-center space-x-3">
+                    {/* Input field */}
+                    <input
+                        type="text"
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Escribe tu mensaje..."
+                        className={`flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-800 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed ${
+                            darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                        }`}
+                        disabled={isAssistantLoading}
+                        aria-label="Chat input"
+                    />
+                    {/* Send button */}
+                    <button
+                        onClick={handleSendMessage}
+                        disabled={!inputText.trim() || isAssistantLoading}
+                        className={`p-3 rounded-lg text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-800 focus:ring-opacity-75 ${currentSendButtonBg} disabled:opacity-50 disabled:cursor-not-allowed`}
+                        aria-label="Send message"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                            <path d="M3.105 3.105a.75.75 0 0 1 .815-.11l14.171 4.724a.75.75 0 0 1 0 1.362L3.92 13.73a.75.75 0 0 1-.815-.11.75.75 0 0 1-.11-.815L4.724 8.5 3.001 3.92a.75.75 0 0 1 .104-.815Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Profile Page Component (unchanged)
+// --- Profile Page Component ---
+const ProfilePage = ({ setActiveModal, darkMode }) => {
+    // State for displaying profile data
+    const [viewName, setViewName] = useState('');
+    const [viewOccupation, setViewOccupation] = useState('');
+    const [viewGoals, setViewGoals] = useState('');
+
+    // Load profile data from localStorage on component mount
+    useEffect(() => {
+        try {
+            setViewName(localStorage.getItem('profileName') || '');
+            setViewOccupation(localStorage.getItem('profileOccupation') || '');
+            setViewGoals(localStorage.getItem('profileGoals') || '');
+            console.log("Profile data loaded for ProfilePage view.");
+        } catch (error) {
+            console.error("Failed to load profile data for ProfilePage view", error);
+        }
+    }, []);
+
+    // Function to open the profile edit modal
+    const openEditModal = () => {
+        setActiveModal('perfil');
+    };
+
+    return (
+        <div className="p-6 md:p-8">
+            <h1 className="text-2xl md:text-3xl font-bold mb-8 dark:text-white">Tu Perfil 👤</h1>
+            {/* Profile display card */}
+            <div className={`rounded-xl p-6 space-y-6 ${darkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+                {/* Display Name */}
+                <div>
+                    <h2 className={`text-sm font-medium mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Nombre:</h2>
+                    <p className={`mt-1 text-lg md:text-xl ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{viewName || 'No especificado'}</p>
+                </div>
+                {/* Display Occupation */}
+                <div>
+                    <h2 className={`text-sm font-medium mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Ocupación:</h2>
+                    <p className={`mt-1 text-lg md:text-xl ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{viewOccupation || 'No especificada'}</p>
+                </div>
+                {/* Display Goals/Story */}
+                <div>
+                    <h2 className={`text-sm font-medium mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Metas / Historia:</h2>
+                    <p className={`mt-1 text-base md:text-lg whitespace-pre-wrap leading-relaxed ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{viewGoals || 'No especificadas'}</p>
+                </div>
+            </div>
+            {/* Edit Profile Button */}
+            <div className="mt-8 text-center">
+                <motion.button
+                    onClick={openEditModal}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
+                >
+                    Editar Perfil
+                </motion.button>
+            </div>
+            {/* Local storage note */}
+            <p className="text-xs text-center mt-5 text-gray-500 dark:text-gray-400">
+                (Nota: Los cambios se guardan localmente en tu navegador.)
+            </p>
+        </div>
+    );
+};
+
+// Bottom Navigation Component (unchanged)
+// --- Bottom Navigation Bar Component ---
+const BottomNavigationBar = ({ currentPage, setCurrentPage, openCategorySidebar, darkMode, themeColor, setActiveModal, setEmergencyModalView }) => {
+    // Navigation items data
+    const navItems = [
+        { name: 'inicio', label: 'Inicio', icon: '🏠' },
+        { name: 'categorias', label: 'Categorías', icon: '📚' },
+        { name: 'sos', label: 'SOS', icon: '🆘' },
+        { name: 'asistente', label: 'Asistente', icon: '💬' },
+        { name: 'perfil', label: 'Perfil', icon: '👤' },
+    ];
+
+    // Theme-based CSS classes for active state, text color, and indicator
+    const themeActiveBgClasses = { blue: 'bg-blue-100', red: 'bg-red-100', green: 'bg-green-100', yellow: 'bg-yellow-100', purple: 'bg-purple-100', pink: 'bg-pink-100', orange: 'bg-orange-100', teal: 'bg-teal-100', indigo: 'bg-indigo-100', gray: 'bg-gray-200', lime: 'bg-lime-100', cyan: 'bg-cyan-100' };
+    const themeTextClasses = { blue: 'text-blue-700', red: 'text-red-700', green: 'text-green-700', yellow: 'text-yellow-700', purple: 'text-purple-700', pink: 'text-pink-700', orange: 'text-orange-700', teal: 'text-teal-700', indigo: 'text-indigo-700', gray: 'text-gray-700', lime: 'text-lime-700', cyan: 'text-cyan-700' };
+    const themeDarkTextClasses = { blue: 'dark:text-blue-300', red: 'dark:text-red-300', green: 'dark:text-green-300', yellow: 'dark:text-yellow-300', purple: 'dark:text-purple-300', pink: 'dark:text-pink-300', orange: 'dark:text-orange-300', teal: 'dark:text-teal-300', indigo: 'dark:text-indigo-300', gray: 'dark:text-gray-300', lime: 'dark:text-lime-300', cyan: 'dark:text-cyan-300' };
+    const currentThemeActiveBg = themeActiveBgClasses[themeColor] || 'bg-gray-200';
+    const activeTextColorDark = themeDarkTextClasses[themeColor] || 'dark:text-gray-100';
+    const inactiveTextColorDark = 'text-gray-400 hover:text-gray-300';
+    const activeTextColorLight = themeTextClasses[themeColor] || 'text-blue-700';
+    const inactiveTextColorLight = 'text-gray-500 hover:text-gray-700';
+    const themeIndicatorColor = { blue: 'bg-blue-600', red: 'bg-red-600', green: 'bg-green-600', yellow: 'bg-yellow-500', purple: 'bg-purple-600', pink: 'bg-pink-600', orange: 'bg-orange-600', teal: 'bg-teal-600', indigo: 'bg-indigo-600', gray: 'bg-gray-600', lime: 'bg-lime-600', cyan: 'bg-cyan-600' }[themeColor] || 'bg-blue-600';
+
+    // Handle navigation item clicks
+    const handleNavClick = (itemName) => {
+        if (itemName === 'categorias') {
+            openCategorySidebar(); // Open category sidebar
+        } else if (itemName === 'sos') {
+            setActiveModal('emergencia'); // Open emergency modal
+            setEmergencyModalView('main'); // Set modal view to main
+        } else {
+            setCurrentPage(itemName); // Set the current page
+        }
+    };
+
+    return (
+        <nav className={`fixed bottom-0 left-0 right-0 border-t shadow-lg z-40 backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white/80 border-gray-200/50'}`}>
+            <div className="flex justify-around items-center h-16 max-w-screen-md mx-auto px-2 relative">
+                {/* Map through navigation items */}
+                {navItems.map((item) => {
+                    const isActive = item.name !== 'sos' && currentPage === item.name;
+                    const isSOS = item.name === 'sos';
+                    const sosColor = darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700';
+                    return (
+                        <motion.button
+                            key={item.name}
+                            onClick={() => handleNavClick(item.name)}
+                            // SOS button animation
+                            animate={isSOS ? { opacity: [1, 0.6, 1] } : {}}
+                            transition={isSOS ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : { type: 'spring', stiffness: 400, damping: 15 }}
+                            whileHover={{ scale: 1.04, y: -2 }}
+                            whileTap={{ scale: 0.96 }}
+                            className={`relative flex flex-col items-center justify-center text-center px-1 py-1 rounded-md w-1/5 h-full transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-500/50 ${
+                                isActive
+                                    ? (darkMode ? `${activeTextColorDark}` : `${currentThemeActiveBg} ${activeTextColorLight}`)
+                                    : (isSOS ? sosColor : (darkMode ? inactiveTextColorDark : inactiveTextColorLight))
+                            }`}
+                            aria-label={item.label}
+                        >
+                            {/* Active indicator line */}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className={`absolute -top-px left-0 right-0 h-0.5 ${themeIndicatorColor}`}
+                                    initial={false}
+                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                />
+                            )}
+                            {/* Icon */}
+                            <span className={`text-2xl mb-0.5 ${isSOS ? sosColor.split(' ')[0] : ''}`}>{item.icon}</span>
+                            {/* Label */}
+                            <span className={`text-[10px] sm:text-xs font-medium ${isSOS ? sosColor.split(' ')[0] : ''}`}>{item.label}</span>
+                        </motion.button>
+                    );
+                })}
+            </div>
+        </nav>
+    );
+};
+
+// Category Sidebar Component (unchanged)
+// --- Category Sidebar Component ---
+const CategorySidebar = ({ isOpen, onClose, categories, onCategoryClick, darkMode, themeColor, themeHeaderBgClasses, setActiveModal }) => {
+    // State for search term
+    const [searchTerm, setSearchTerm] = useState('');
+    // Filter categories based on search term
+    const filteredCategories = categories.filter(category =>
+        category.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Handle category item click
+    const handleItemClick = (category) => {
+        onCategoryClick(category); // Trigger category click handler in parent
+    };
+
+    // Function to open the help modal
+    const openHelpModal = () => {
+        setActiveModal('help'); // Set active modal to 'help'
+        onClose(); // Close the sidebar
+    };
+
+    // Determine current theme header background color
+    const currentThemeHeaderBg = (themeHeaderBgClasses && themeHeaderBgClasses[themeColor]) ? themeHeaderBgClasses[themeColor] : 'bg-gray-700';
+
+    // Function to render category label with highlighted search term
+    const renderHighlightedLabel = (label, term) => {
+        if (!term.trim()) {
+            return label; // Return label as is if no search term
+        }
+        const lowerLabel = label.toLowerCase();
+        const lowerTerm = term.toLowerCase();
+        const startIndex = lowerLabel.indexOf(lowerTerm);
+        if (startIndex === -1) {
+            return label; // Return label as is if term not found
+        }
+        const endIndex = startIndex + term.length;
+        const before = label.substring(0, startIndex);
+        const match = label.substring(startIndex, endIndex);
+        const after = label.substring(endIndex);
+        return (
+            <>
+                {before}
+                <span className="font-bold bg-yellow-300/70 dark:bg-yellow-600/50 rounded px-1 py-0.5">
+                    {match} {/* Highlighted match */}
+                </span>
+                {after}
+            </>
+        );
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        key="category-sidebar-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 bg-black bg-opacity-60 z-40"
+                        onClick={onClose} // Close sidebar on backdrop click
+                    />
+                    {/* Sidebar Content */}
+                    <motion.div
+                        key="category-sidebar-content"
+                        initial={{ x: '-100%' }} // Initial position off-screen left
+                        animate={{ x: 0 }} // Animate to position 0 (visible)
+                        exit={{ x: '-100%' }} // Animate back off-screen left on exit
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }} // Spring animation
+                        className={`fixed top-0 left-0 h-full w-72 md:w-80 shadow-xl z-50 flex flex-col ${darkMode ? 'bg-gray-850 text-gray-100' : 'bg-white text-gray-900'}`}
+                    >
+                        {/* Sidebar Header */}
+                        <div className={`flex items-center justify-between p-5 ${currentThemeHeaderBg} text-white shadow-md`}>
+                            <h2 className="text-xl font-semibold">Categorías</h2>
+                            <button
+                                onClick={onClose}
+                                className={`p-1.5 rounded-full text-white/80 hover:text-white hover:bg-black/20 transition-colors focus:outline-none focus:ring-1 focus:ring-white/50`}
+                                aria-label="Cerrar categorías"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        {/* Search Bar */}
+                        <div className="p-4 border-b dark:border-gray-700">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar recursos..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className={`w-full p-2.5 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-gray-850 focus:ring-opacity-75 ${
+                                        darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                                    }`}
+                                    aria-label="Search categories"
+                                />
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Category List */}
+                        <div className="flex-1 overflow-y-auto px-3 py-3">
+                            <ul className="space-y-1.5">
+                                {filteredCategories.map((category) => (
+                                    <li key={category.key}>
+                                        <motion.button
+                                            onClick={() => handleItemClick(category)}
+                                            whileHover={{ scale: 1.03, backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }}
+                                            whileTap={{ scale: 0.97 }}
+                                            transition={{ duration: 0.15 }}
+                                            className={`w-full flex items-center p-2.5 rounded-lg text-left transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-blue-500/50`}
+                                        >
+                                            <span className="text-xl mr-3.5 w-6 text-center">{category.emoji}</span>
+                                            <span className="text-base font-medium">{renderHighlightedLabel(category.label, searchTerm)}</span>
+                                        </motion.button>
+                                    </li>
+                                ))}
+                                {/* Message when no categories found */}
+                                {filteredCategories.length === 0 && (
+                                    <li className={`p-3 text-base text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        No se encontraron categorías.
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                        {/* Help Button */}
+                        <div className="p-4 border-t dark:border-gray-700 mt-auto">
+                            <motion.button
+                                onClick={openHelpModal}
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className={`w-full flex items-center justify-center p-3 rounded-lg text-base font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-850 ${darkMode ? 'bg-gray-700 hover:bg-gray-600 focus:ring-gray-500' : 'bg-gray-100 hover:bg-gray-200 focus:ring-gray-400'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                </svg>
+                                Ayuda y Soporte
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+};
+
+
+// --- Main Application Component ---
+export default function App() {
+    // State Hooks
+    const [darkMode, setDarkMode] = useState(true); // Dark mode state
+    const [themeColor, setThemeColor] = useState('blue'); // Theme color state
+    const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0); // Index for informative phrases carousel
+    const initialAssistantGreeting = "Hola me llamo Epicentrum Assistant. ¿En qué puedo ayudarte hoy?"; // Initial assistant message
+    // Chat history state, loaded from localStorage or initialized
+    const [chatHistory, setChatHistory] = useState(() => {
+        try {
+            const saved = localStorage.getItem('chatHistory');
+            const initialHistory = saved ? JSON.parse(saved) : [];
+            // Ensure initial greeting is present if history is empty or doesn't start with it
+            if (initialHistory.length === 0 || initialHistory[0].content !== initialAssistantGreeting) {
+                return [{ type: 'assistant', label: 'Asistente', content: initialAssistantGreeting }];
+            }
+            return initialHistory;
+        } catch (error) {
+            console.error("Failed to parse chat history", error);
+            return [{ type: 'assistant', label: 'Asistente', content: initialAssistantGreeting }]; // Fallback
+        }
+    });
+    const [inputText, setInputText] = useState(''); // Chat input text state
+    const [activeModal, setActiveModal] = useState(''); // State for currently active modal
+    const [sidebarOpen, setSidebarOpen] = useState(false); // State for left history/settings sidebar
+    const [isCategorySidebarOpen, setIsCategorySidebarOpen] = useState(false); // State for category sidebar
+    const [isAssistantLoading, setIsAssistantLoading] = useState(false); // Loading state for assistant response
+    const [selectedCategoryData, setSelectedCategoryData] = useState(null); // Data for category detail modal
+    const [selectedCountryData, setSelectedCountryData] = useState(null); // Data for country detail modal
+    // Profile state, loaded from localStorage
+    const [profileName, setProfileName] = useState('');
+    const [profileOccupation, setProfileOccupation] = useState('');
+    const [profileGoals, setProfileGoals] = useState('');
+    const [profileSaveMessage, setProfileSaveMessage] = useState(''); // Message after saving profile
+    const [chatTone, setChatTone] = useState('amigable'); // Chat tone state, loaded from localStorage
+    const [emergencyModalView, setEmergencyModalView] = useState('main'); // View state within the emergency modal
+    const [emergencyContact, setEmergencyContact] = useState(() => localStorage.getItem('emergencyContact') || ''); // Emergency contact state, loaded from localStorage
+    const [sosSendAttemptMessage, setSosSendAttemptMessage] = useState(''); // Message after attempting to send SOS
+    const [isContactSaved, setIsContactSaved] = useState(!!localStorage.getItem('emergencyContact')); // Boolean indicating if emergency contact is saved
+    const [currentPage, setCurrentPage] = useState('inicio'); // Current active page state
+
+    // --- Effects ---
+    // Load profile data from localStorage on mount
+    useEffect(() => {
+        try {
+            setProfileName(localStorage.getItem('profileName') || '');
+            setProfileOccupation(localStorage.getItem('profileOccupation') || '');
+            setProfileGoals(localStorage.getItem('profileGoals') || '');
+        } catch (error) {
+            console.error("Failed to load profile data", error);
+        }
+    }, []);
+
+    // Load chat tone from localStorage on mount
+    useEffect(() => {
+        try {
+            const savedTone = localStorage.getItem('chatTone');
+            if (savedTone) setChatTone(savedTone);
+        } catch (error) {
+            console.error("Failed to load chat tone", error);
+        }
+    }, []);
+
+    // Save chat tone to localStorage when it changes
+    useEffect(() => {
+        try {
+            localStorage.setItem('chatTone', chatTone);
+        } catch (error) {
+            console.error("Failed to save chat tone", error);
+        }
+    }, [chatTone]);
+
+    // Load theme color from localStorage on mount
+    useEffect(() => {
+        try {
+            const savedTheme = localStorage.getItem('themeColor');
+            if (savedTheme) setThemeColor(savedTheme);
+        } catch (error) {
+            console.error("Failed to load theme color", error);
+        }
+    }, []);
+
+    // Save theme color to localStorage when it changes
+    useEffect(() => {
+        try {
+            localStorage.setItem('themeColor', themeColor);
+        } catch (error) {
+            console.error("Failed to save theme color", error);
+        }
+    }, [themeColor]);
+
+    // Set up interval for informative phrases carousel
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentPhraseIndex(prev => (prev + 1) % informativePhrases.length);
+        }, 5000); // Change phrase every 5 seconds
+        return () => clearInterval(interval); // Cleanup interval on unmount
+    }, []);
+
+    // Save chat history to localStorage when it changes
+    useEffect(() => {
+        try {
+            // Only save if history is not just the initial greeting
+            if (chatHistory.length > 1 || (chatHistory.length === 1 && chatHistory[0].content !== initialAssistantGreeting)) {
+                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            } else {
+                // Remove history if it's just the initial greeting (effectively clearing it)
+                localStorage.removeItem('chatHistory');
+            }
+        } catch (error) {
+            console.error("Failed to save chat history", error);
+        }
+    }, [chatHistory, initialAssistantGreeting]);
+
+    // Apply dark mode class to HTML element and save preference
+    useEffect(() => {
+        const htmlElement = document.documentElement;
+        if (darkMode) {
+            htmlElement.classList.add('dark');
+        } else {
+            htmlElement.classList.remove('dark');
+        }
+        try {
+            localStorage.setItem('darkMode', JSON.stringify(darkMode));
+        } catch (error) {
+            console.error("Failed to save dark mode preference", error);
+        }
+    }, [darkMode]);
+
+    // Load dark mode preference from localStorage on mount
+    useEffect(() => {
+        try {
+            const savedDarkMode = localStorage.getItem('darkMode');
+            if (savedDarkMode !== null) {
+                setDarkMode(JSON.parse(savedDarkMode));
+            }
+        } catch (error) {
+            console.error("Failed to load dark mode preference", error);
+        }
+    }, []);
+
+    // --- Handlers ---
+    // Handle category click: opens category detail modal
+    const handleCategoryClick = (category) => {
+        // Basic validation
+        if (!category || typeof category !== 'object') {
+            console.error("Invalid category object:", category);
+            return;
+        }
+        // Ensure category has a key or label to use as identifier
+        let categoryKey = category.key || category.label;
+        if (!categoryKey) {
+            console.error("Category missing key/label:", category);
+            return;
+        }
+        // Prepare data for modal, ensuring key exists
+        const categoryDataForModal = { ...category, key: categoryKey };
+        setSelectedCategoryData(categoryDataForModal);
+        setSelectedCountryData(null); // Clear country data
+        setIsCategorySidebarOpen(false); // Close sidebar if open
+        setActiveModal('categoryDetail'); // Open the modal
+    };
+
+    // Handle flag click: opens country detail modal
+    const handleFlagClick = (country) => {
+        // Basic validation
+        if (!country || typeof country !== 'object' || !country.key) {
+            console.error("Invalid country object:", country);
+            return;
+        }
+        setSelectedCountryData(country);
+        setSelectedCategoryData(null); // Clear category data
+        setIsCategorySidebarOpen(false); // Close sidebar if open
+        setActiveModal('countryDetail'); // Open the modal
+    };
+
+    // Handle sending a chat message
+    const handleSendMessage = async () => {
+        const trimmedInput = inputText.trim();
+        if (!trimmedInput || isAssistantLoading) return; // Prevent sending empty or while loading
+
+        const userMessage = { type: 'user', label: 'Tú', content: trimmedInput };
+        const currentTone = chatTone; // Capture current tone
+
+        setInputText(''); // Clear input field
+        setIsAssistantLoading(true); // Set loading state
+
+        // Update chat history, removing initial greeting if it's the only message
+        const historyToUpdate = chatHistory.length === 1 && chatHistory[0].content === initialAssistantGreeting
+            ? []
+            : chatHistory;
+        setChatHistory([...historyToUpdate, userMessage]);
+
+        try {
+            // --- Simulate backend call ---
+            console.log("Sending to backend:", { message: trimmedInput, tone: currentTone });
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+            const simulatedResponse = `Recibí tu mensaje sobre "${trimmedInput}" con tono ${currentTone}. (Respuesta simulada)`;
+            // --- End simulation ---
+
+            const assistantMessage = { type: 'assistant', label: 'Asistente', content: simulatedResponse };
+            setChatHistory(prev => [...prev, assistantMessage]); // Add assistant response to history
+
+        } catch (error) {
+            console.error("Network or fetch error:", error);
+            // Add error message to chat
+            const errorMessage = { type: 'assistant', label: 'Asistente', content: "Error de red al contactar al asistente. Intenta de nuevo." };
+            setChatHistory(prev => [...prev, errorMessage]);
+        } finally {
+            setIsAssistantLoading(false); // Reset loading state
+        }
+    };
+
+    // Handle saving profile data to localStorage
+    const handleSaveProfile = () => {
+        try {
+            localStorage.setItem('profileName', profileName);
+            localStorage.setItem('profileOccupation', profileOccupation);
+            localStorage.setItem('profileGoals', profileGoals);
+            setProfileSaveMessage("¡Perfil guardado con éxito!"); // Show success message
+            // Close modal after a delay
+            setTimeout(() => {
+                setProfileSaveMessage('');
+                setActiveModal('');
+            }, 2000);
+        } catch (error) {
+            console.error("Failed to save profile", error);
+            setProfileSaveMessage("Error al guardar el perfil."); // Show error message
+            setTimeout(() => setProfileSaveMessage(''), 4000); // Keep error message longer
+        }
+    };
+
+    // Navigate to the SOS contact setup view within the emergency modal
+    const goToSOSSetupView = () => {
+        setSosSendAttemptMessage(''); // Clear previous SOS messages
+        setEmergencyModalView('sos_setup');
+    };
+
+    // Handle saving the emergency contact number
+    const handleSaveContact = () => {
+        const contactToSave = emergencyContact.trim();
+        // Validate phone number format (basic international format check)
+        if (contactToSave && /^\+?[1-9]\d{1,14}$/.test(contactToSave)) {
+            try {
+                localStorage.setItem('emergencyContact', contactToSave);
+                setIsContactSaved(true); // Update saved status
+                setSosSendAttemptMessage('¡Contacto guardado!'); // Show success message
+                setTimeout(() => setSosSendAttemptMessage(''), 2500);
+            } catch (error) {
+                console.error("Failed to save emergency contact", error);
+                setSosSendAttemptMessage('Error al guardar el contacto.');
+                setTimeout(() => setSosSendAttemptMessage(''), 3000);
+            }
+        } else {
+            // If invalid, remove any existing contact and show error
+            try {
+                localStorage.removeItem('emergencyContact');
+            } catch (error) {
+                console.error("Failed to remove emergency contact", error);
+            }
+            setIsContactSaved(false);
+            setSosSendAttemptMessage('Error: Número inválido. Usa formato internacional (ej: +1...).');
+            setTimeout(() => setSosSendAttemptMessage(''), 4000);
+        }
+    };
+
+    // Generate the SOS message content
+    const createSOSMessage = () => `🚨 ¡EMERGENCIA! Necesito ayuda urgente. Mi ubicación aproximada es [UBICACIÓN SI ES POSIBLE].`;
+
+    // Handle sending the SOS message via WhatsApp
+    const handleSendWhatsApp = () => {
+        // Check if contact is saved
+        if (!isContactSaved || !emergencyContact) {
+            setSosSendAttemptMessage('Error: Guarda un contacto válido primero.');
+            setTimeout(() => setSosSendAttemptMessage(''), 3000);
+            return;
+        }
+
+        const message = createSOSMessage();
+        // Clean and format the phone number for WhatsApp URL
+        const whatsappNumber = emergencyContact.replace(/[^\d+]/g, '').replace(/^\+/, '');
+
+        // Basic length check for the number
+        if (whatsappNumber.length < 7) {
+            setSosSendAttemptMessage('Error: Número de contacto inválido.');
+            setTimeout(() => setSosSendAttemptMessage(''), 3000);
+            return;
+        }
+
+        // Construct WhatsApp URL
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        setSosSendAttemptMessage('Intentando abrir WhatsApp...');
+
+        // Attempt to open WhatsApp in a new tab/window
+        const newWindow = window.open(whatsappUrl, '_blank');
+
+        // Check if the window failed to open (e.g., due to popup blocker)
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            setSosSendAttemptMessage('No se pudo abrir WhatsApp. Revisa bloqueador de popups.');
+            setTimeout(() => setSosSendAttemptMessage(''), 4000);
+        } else {
+            // Clear message after a short delay assuming it opened
+            setTimeout(() => setSosSendAttemptMessage(''), 2500);
+        }
+    };
+
+    // --- Theme Class Definitions ---
+    // Maps for theme-based CSS classes
+    const themeHeaderBgClasses = { blue: 'bg-blue-600', red: 'bg-red-600', green: 'bg-green-600', yellow: 'bg-yellow-500', purple: 'bg-purple-600', pink: 'bg-pink-600', orange: 'bg-orange-600', teal: 'bg-teal-600', indigo: 'bg-indigo-600', gray: 'bg-gray-700', lime: 'bg-lime-600', cyan: 'bg-cyan-600' };
+    const themePastelBgClasses = { blue: 'bg-blue-50', red: 'bg-red-50', green: 'bg-green-50', yellow: 'bg-yellow-50', purple: 'bg-purple-50', pink: 'bg-pink-50', orange: 'bg-orange-50', teal: 'bg-teal-50', indigo: 'bg-indigo-50', gray: 'bg-gray-100', lime: 'bg-lime-50', cyan: 'bg-cyan-50' };
+    const themePastelBorderClasses = { blue: 'border-blue-200', red: 'border-red-200', green: 'border-green-200', yellow: 'border-yellow-200', purple: 'border-purple-200', pink: 'border-pink-200', orange: 'border-orange-200', teal: 'border-teal-200', indigo: 'border-indigo-200', gray: 'border-gray-200', lime: 'border-lime-200', cyan: 'border-cyan-200' };
+    const themeDarkPastelBorderClasses = { blue: 'dark:border-blue-700', red: 'dark:border-red-700', green: 'dark:border-green-700', yellow: 'dark:border-yellow-600', purple: 'dark:border-purple-700', pink: 'dark:border-pink-700', orange: 'dark:border-orange-700', teal: 'dark:border-teal-700', indigo: 'dark:border-indigo-700', gray: 'dark:border-gray-600', lime: 'dark:border-lime-700', cyan: 'dark:border-cyan-700' };
+    const themePastelTextClasses = { blue: 'text-blue-800', red: 'text-red-800', green: 'text-green-800', yellow: 'text-yellow-800', purple: 'text-purple-800', pink: 'text-pink-800', orange: 'text-orange-800', teal: 'text-teal-800', indigo: 'text-indigo-800', gray: 'text-gray-800', lime: 'text-lime-800', cyan: 'text-cyan-800' };
+    const themeTitleTextClasses = { blue: 'text-blue-600 dark:text-blue-400', red: 'text-red-600 dark:text-red-400', green: 'text-green-600 dark:text-green-400', yellow: 'text-yellow-500 dark:text-yellow-400', purple: 'text-purple-600 dark:text-purple-400', pink: 'text-pink-600 dark:text-pink-400', orange: 'text-orange-600 dark:text-orange-400', teal: 'text-teal-600 dark:text-teal-400', indigo: 'text-indigo-600 dark:text-indigo-400', gray: 'text-gray-700 dark:text-gray-300', lime: 'text-lime-600 dark:text-lime-400', cyan: 'text-cyan-600 dark:text-cyan-400' };
+
+    // --- Get current theme classes ---
+    // Determine the current theme classes based on the selected themeColor state
+    const currentThemeHeaderBg = themeHeaderBgClasses[themeColor] || 'bg-blue-600'; // Default to blue if color not found
+    const currentPastelBg = themePastelBgClasses[themeColor] || 'bg-gray-100';
+    const currentPastelBorder = themePastelBorderClasses[themeColor] || 'border-gray-200';
+    const currentDarkPastelBorder = themeDarkPastelBorderClasses[themeColor] || 'dark:border-gray-600';
+    const currentPastelText = themePastelTextClasses[themeColor] || 'text-gray-800';
+    const currentThemeTitleText = themeTitleTextClasses[themeColor] || 'text-gray-900 dark:text-white';
+
+    // --- Render current page ---
+    // Function to render the component corresponding to the currentPage state
+    const renderCurrentPage = () => {
+        switch (currentPage) {
+            case 'inicio':
+                return <HomePage categories={categories} onCategoryClick={handleCategoryClick} />;
+            case 'categorias':
+                return <CategoriesPage />; // Placeholder page
+            case 'asistente':
+                return <AssistantPage chatHistory={chatHistory} inputText={inputText} setInputText={setInputText} handleSendMessage={handleSendMessage} isAssistantLoading={isAssistantLoading} darkMode={darkMode} themeColor={themeColor} initialAssistantGreeting={initialAssistantGreeting} />;
+            case 'perfil':
+                return <ProfilePage setActiveModal={setActiveModal} darkMode={darkMode} />;
+            default:
+                return <HomePage categories={categories} onCategoryClick={handleCategoryClick} />; // Default to home page
+        }
+    };
+
+    // --- Render JSX ---
+    // Main component render method
+    return (
+        <>
+            {/* Main container with dark mode and background color */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className={`h-screen flex flex-col font-sans ${darkMode ? 'dark bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}
+            >
+                {/* --- Modals --- */}
+                <AnimatePresence>
+                    {/* Render modal only if activeModal state is set */}
+                    {activeModal && (
+                        <motion.div
+                            key="modal-backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
+                            // Close modal on backdrop click, reset related states
+                            onClick={() => {
+                                setActiveModal('');
+                                setSelectedCategoryData(null);
+                                setSelectedCountryData(null);
+                                setEmergencyModalView('main');
+                                setProfileSaveMessage('');
+                                setSosSendAttemptMessage('');
+                            }}
+                        >
+                            {/* Modal Content */}
+                            <motion.div
+                                key="modal-content"
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                // Apply theme-specific background/border for category detail, otherwise default
+                                className={`rounded-xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto border ${
+                                    activeModal === 'categoryDetail' && selectedCategoryData
+                                        ? `${themePastelBgClasses[selectedCategoryData.color?.split('-')[1]] || currentPastelBg} ${themePastelBorderClasses[selectedCategoryData.color?.split('-')[1]] || currentPastelBorder} ${themeDarkPastelBorderClasses[selectedCategoryData.color?.split('-')[1]] || currentDarkPastelBorder} dark:bg-gray-800 dark:text-gray-100`
+                                        : `bg-white dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700`
+                                }`}
+                                onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside content
+                            >
+                                {/* Perfil Modal Content */}
+                                {activeModal === 'perfil' && (
+                                    <>
+                                        <h2 className={`text-xl md:text-2xl font-semibold mb-5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Cuéntanos un poco sobre ti 🧑‍💼</h2>
+                                        <p className={`text-base mb-5 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Esta información se guarda localmente y ayuda al asistente a personalizar las respuestas.</p>
+                                        <div className="space-y-4">
+                                            {/* Name Input */}
+                                            <div>
+                                                <label htmlFor="profileNameInput" className={`block text-sm font-medium mb-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>¿Cómo te llamas?</label>
+                                                <input id="profileNameInput" value={profileName} onChange={(e) => setProfileName(e.target.value)} className={`w-full p-2.5 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 placeholder-gray-500 text-gray-900'} focus:ring-1 focus:ring-blue-500 focus:outline-none`} placeholder="Tu nombre" />
+                                            </div>
+                                            {/* Occupation Input */}
+                                            <div>
+                                                <label htmlFor="profileOccupationInput" className={`block text-sm font-medium mb-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>¿A qué te dedicas actualmente?</label>
+                                                <input id="profileOccupationInput" value={profileOccupation} onChange={(e) => setProfileOccupation(e.target.value)} className={`w-full p-2.5 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 placeholder-gray-500 text-gray-900'} focus:ring-1 focus:ring-blue-500 focus:outline-none`} placeholder="Tu ocupación o trabajo" />
+                                            </div>
+                                            {/* Goals/Story Textarea */}
+                                            <div>
+                                                <label htmlFor="profileGoalsInput" className={`block text-sm font-medium mb-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>¿Qué te gustaría lograr en EE.UU.? (Opcional)</label>
+                                                <textarea id="profileGoalsInput" value={profileGoals} onChange={(e) => setProfileGoals(e.target.value)} className={`w-full p-2.5 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 placeholder-gray-500 text-gray-900'} focus:ring-1 focus:ring-blue-500 focus:outline-none`} rows={4} placeholder="Cuéntanos tus sueños, metas o tu historia..." />
+                                            </div>
+                                        </div>
+                                        {/* Profile Save Message */}
+                                        <AnimatePresence>
+                                            {profileSaveMessage && (
+                                                <motion.p
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className={`mt-4 text-sm font-medium flex items-center justify-center ${profileSaveMessage.includes('Error') ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
+                                                >
+                                                    {profileSaveMessage.includes('Error') ? '⚠️' : '✅'} <span className="ml-2">{profileSaveMessage}</span>
+                                                </motion.p>
+                                            )}
+                                        </AnimatePresence>
+                                        {/* Save Button */}
+                                        <div className="text-right mt-6">
+                                            <motion.button
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
+                                                onClick={handleSaveProfile}
+                                            >
+                                                Guardar y cerrar
+                                            </motion.button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Config Modal Content */}
+                                {activeModal === 'config' && (
+                                    <>
+                                        <h2 className={`text-xl md:text-2xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Configuración ⚙️</h2>
+                                        {/* Chat Tone Select */}
+                                        <div className="mb-6">
+                                            <label htmlFor="chatToneSelect" className={`block mb-2 text-base font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Tono del chat</label>
+                                            <select
+                                                id="chatToneSelect"
+                                                value={chatTone}
+                                                onChange={(e) => setChatTone(e.target.value)}
+                                                className={`w-full p-2.5 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-1 focus:ring-blue-500 focus:outline-none`}
+                                            >
+                                                <option value="amigable">Amigable</option>
+                                                <option value="profesional">Profesional</option>
+                                                <option value="serio">Serio</option>
+                                                <option value="inspirador">Inspirador</option>
+                                                <option value="resumido">Resumido</option>
+                                                <option value="explicativo">Explicativo</option>
+                                            </select>
+                                        </div>
+                                        {/* Theme Color Select */}
+                                        <div className="mb-6">
+                                            <label className={`block mb-2 text-base font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Color del tema</label>
+                                            <div className="flex gap-3 flex-wrap">
+                                                {Object.keys(themeHeaderBgClasses).map(color => (
+                                                    <button
+                                                        key={color}
+                                                        aria-label={`Set theme to ${color}`}
+                                                        onClick={() => setThemeColor(color)}
+                                                        className={`w-7 h-7 rounded-full ${
+                                                            themeHeaderBgClasses[color] || 'bg-gray-500' // Fallback color
+                                                        } border-2 transition-all ${themeColor === color ? 'border-black dark:border-white scale-110 ring-2 ring-offset-1 dark:ring-offset-gray-800 ring-current' : 'border-transparent hover:opacity-80'}`}
+                                                    ></button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Close Button */}
+                                        <div className="text-right mt-8">
+                                            <motion.button
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
+                                                onClick={() => setActiveModal('')}
+                                            >
+                                                Cerrar
+                                            </motion.button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Emergencia Modal Content */}
+                                {activeModal === 'emergencia' && (
+                                    <>
+                                        {/* Main Emergency View */}
+                                        {emergencyModalView === 'main' && (
+                                            <div className="space-y-3">
+                                                <h2 className={`text-xl md:text-2xl font-bold mb-5 text-center ${currentThemeTitleText}`}>🚨 Emergencia</h2>
+                                                {/* Emergency Buttons */}
+                                                <motion.a whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} href="tel:911" className="block w-full bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800/40 dark:text-red-200 dark:hover:bg-red-800/60 py-3 rounded-lg text-center font-semibold transition-colors text-base">Llamar al 911</motion.a>
+                                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={goToSOSSetupView} className="block w-full bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-800/40 dark:text-yellow-200 dark:hover:bg-yellow-800/60 py-3 rounded-lg font-semibold transition-colors text-base">Contacto SOS</motion.button>
+                                                <motion.a whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} href="https://translate.google.com/?sl=auto&tl=en&op=translate" target="_blank" rel="noopener noreferrer" className="block w-full bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800/40 dark:text-blue-200 dark:hover:bg-blue-800/60 py-3 rounded-lg text-center font-semibold transition-colors text-base">Traductor de emergencia</motion.a>
+                                                <motion.a whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} href="https://travel.state.gov/content/travel/en/consularnotification.html" target="_blank" rel="noopener noreferrer" className="block w-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-800/40 dark:text-indigo-200 dark:hover:bg-indigo-800/60 py-3 rounded-lg text-center font-semibold transition-colors text-base">Ubicar consulado</motion.a>
+                                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setEmergencyModalView('rights')} className="block w-full bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800/40 dark:text-green-200 dark:hover:bg-green-800/60 py-3 rounded-lg font-semibold transition-colors text-base">Ver derechos si detención</motion.button>
+                                                <motion.a whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} href="https://www.immigrationadvocates.org/nonprofit/legaldirectory/" target="_blank" rel="noopener noreferrer" className="block w-full bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-800/40 dark:text-purple-200 dark:hover:bg-purple-800/60 py-3 rounded-lg text-center font-semibold transition-colors text-base">Buscar ayuda legal</motion.a>
+                                                {/* Close Button */}
+                                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setActiveModal(''); setEmergencyModalView('main'); }} className={`mt-5 block w-full py-2.5 rounded-lg font-semibold transition-colors text-base ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}>Cerrar</motion.button>
+                                            </div>
+                                        )}
+                                        {/* Rights View */}
+                                        {emergencyModalView === 'rights' && (
+                                            <>
+                                                <h3 className={`text-lg md:text-xl font-semibold mb-4 text-center ${currentThemeTitleText}`}>Tus derechos al ser detenido</h3>
+                                                <ul className={`list-disc list-inside text-base space-y-2 mb-5 pl-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                    <li>No firmes nada sin un abogado.</li>
+                                                    <li>Tienes derecho a permanecer en silencio.</li>
+                                                    <li>Pide hablar con un abogado inmediatamente.</li>
+                                                    <li>No reveles tu estatus migratorio ni país de origen.</li>
+                                                    <li>Guarda el número de un abogado o familiar.</li>
+                                                    <li>Tienes derecho a llamar a tu consulado.</li>
+                                                </ul>
+                                                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setEmergencyModalView('main')} className={`block w-full py-2.5 rounded-lg font-semibold transition-colors text-base ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'}`}>Volver</motion.button>
+                                            </>
+                                        )}
+                                        {/* SOS Setup View */}
+                                        {emergencyModalView === 'sos_setup' && (
+                                            <div className="space-y-5">
+                                                <h2 className={`text-xl md:text-2xl font-bold mb-3 text-center ${currentThemeTitleText}`}>🆘 Contacto de Emergencia</h2>
+                                                <p className={`text-sm text-center mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Guarda un número para enviar un mensaje rápido por WhatsApp en caso de emergencia.</p>
+                                                {/* Emergency Contact Input */}
+                                                <div className="mb-4">
+                                                    <label htmlFor="emergencyPhone" className={`block mb-1.5 text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Número de WhatsApp:</label>
+                                                    <div className="flex items-center space-x-2.5">
+                                                        <input
+                                                            id="emergencyPhone"
+                                                            type="tel"
+                                                            value={emergencyContact}
+                                                            onChange={(e) => setEmergencyContact(e.target.value)}
+                                                            placeholder="+15551234567"
+                                                            className={`flex-grow p-2.5 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'} focus:ring-1 focus:ring-blue-500 focus:outline-none`}
+                                                        />
+                                                        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleSaveContact} className={`px-4 py-2.5 rounded-lg font-medium transition-colors text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800/40 dark:text-blue-200 dark:hover:bg-blue-800/60 focus:outline-none focus:ring-1 focus:ring-blue-500/50`}>Guardar</motion.button>
+                                                    </div>
+                                                    <p className={`text-xs mt-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Incluye código de país (ej: +1 para EEUU). Presiona 'Guardar'.</p>
+                                                </div>
+                                                {/* SOS Message Preview */}
+                                                <div className="mb-4">
+                                                    <p className={`block mb-1.5 text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Mensaje a enviar:</p>
+                                                    <p className={`text-base p-3.5 rounded-lg ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>"{createSOSMessage()}"</p>
+                                                </div>
+                                                {/* Send Button and Status */}
+                                                <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                    {/* Warning if contact not saved */}
+                                                    {!isContactSaved && (
+                                                        <p className="text-sm text-center text-yellow-600 dark:text-yellow-400 font-medium mb-1">⚠️ ¡Guarda un contacto válido antes de enviar!</p>
+                                                    )}
+                                                    {/* Send via WhatsApp Button */}
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        onClick={handleSendWhatsApp}
+                                                        disabled={!isContactSaved} // Disable if no contact saved
+                                                        className={`w-full flex items-center justify-center py-3 rounded-lg font-semibold transition-colors text-base ${!isContactSaved ? 'bg-green-50 dark:bg-green-900/20 text-green-400 dark:text-green-500/50 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800/40 dark:text-green-200 dark:hover:bg-green-800/60'}`}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2.5 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.8 0-67.6-9.5-97.2-26.7l-7.1-4.2-72.5 19 19.3-71.1-4.5-7.4c-18.2-29.8-28.1-63.7-28.1-98.5 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+                                                        Enviar por WhatsApp
+                                                    </motion.button>
+                                                    {/* SOS Send Attempt Message */}
+                                                    <AnimatePresence>
+                                                        {sosSendAttemptMessage && (
+                                                            <motion.p
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.3 }}
+                                                                className={`text-sm text-center p-2.5 rounded-lg mt-2 flex items-center justify-center ${sosSendAttemptMessage.startsWith('Error') ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : (sosSendAttemptMessage.startsWith('¡Contacto') ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300')}`}
+                                                            >
+                                                                {sosSendAttemptMessage.startsWith('Error') && <span className="mr-1.5">⚠️</span>}
+                                                                {sosSendAttemptMessage.startsWith('¡Contacto') && <span className="mr-1.5">✅</span>}
+                                                                {sosSendAttemptMessage}
+                                                            </motion.p>
+                                                        )}
+                                                    </AnimatePresence>
+                                                    {/* Back Button */}
+                                                    <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setEmergencyModalView('main')} className={`block w-full py-2.5 rounded-lg font-semibold transition-colors text-base mt-3 ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'}`}>Volver</motion.button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Category Detail Modal Content */}
+                                {activeModal === 'categoryDetail' && selectedCategoryData && (
+                                    <>
+                                        {/* Category Title */}
+                                        <h2 className={`text-2xl md:text-3xl font-bold mb-4 flex items-center ${darkMode ? 'text-white' : currentPastelText }`}>
+                                            <span className="text-3xl md:text-4xl mr-3">{selectedCategoryData.emoji}</span>
+                                            {selectedCategoryData.label}
+                                        </h2>
+                                        {/* Category Content */}
+                                        <p className={`text-base md:text-lg mb-5 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                            {selectedCategoryData.content}
+                                        </p>
+                                        {/* Useful Resources Section */}
+                                        {(extraLinksMap[selectedCategoryData.key] || []).length > 0 && (
+                                            <div className={`mt-5 pt-4 border-t ${darkMode ? 'dark:border-gray-700' : currentPastelBorder}`}>
+                                                <h3 className={`text-base font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Recursos Útiles:</h3>
+                                                <ul className="space-y-4">
+                                                    {(extraLinksMap[selectedCategoryData.key] || []).map((linkInfo, idx) => (
+                                                        <li key={idx} className="text-base">
+                                                            {/* Link Description */}
+                                                            <p className={`mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                                {linkInfo.description}
+                                                            </p>
+                                                            {/* Link URL (if available) */}
+                                                            {linkInfo.url && linkInfo.url !== '#' ? (
+                                                                <a
+                                                                    href={linkInfo.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={`inline-flex items-center underline ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} transition-colors`}
+                                                                >
+                                                                    {/* Display hostname */}
+                                                                    {(() => {
+                                                                        try {
+                                                                            const url = new URL(linkInfo.url);
+                                                                            return url.hostname.replace(/^www\./, ''); // Remove www.
+                                                                        } catch {
+                                                                            return linkInfo.url; // Fallback to full URL if parsing fails
+                                                                        }
+                                                                    })()}
+                                                                    {/* External link icon */}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5 align-middle">
+                                                                        <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z" clipRule="evenodd" />
+                                                                        <path fillRule="evenodd" d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.19a.75.75 0 0 0-.053 1.06Z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                </a>
+                                                            ) : (
+                                                                // Placeholder if URL is missing or '#'
+                                                                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} italic`}>{linkInfo.description.includes('Buscar') ? 'Busca en tu área local' : 'Enlace no disponible'}</span>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {/* Close Button */}
+                                        <div className="text-right mt-8">
+                                            <motion.button
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                className="px-5 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg font-medium transition-colors text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800"
+                                                onClick={() => { setActiveModal(''); setSelectedCategoryData(null); }} // Close modal and clear data
+                                            >
+                                                Cerrar
+                                            </motion.button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* **UPDATED**: Country Detail Modal with Consular Info */}
+                                {/* Country Detail Modal Content */}
+                                {activeModal === 'countryDetail' && selectedCountryData && (
+                                    <>
+                                        {/* Country Title */}
+                                        <h2 className={`text-2xl md:text-3xl font-bold mb-1 flex items-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                            <span className="text-3xl md:text-4xl mr-3">{selectedCountryData.flagEmoji}</span>
+                                            {selectedCountryData.name}
+                                        </h2>
+                                        {/* Country Info Text */}
+                                        <p className={`text-base md:text-lg mt-3 mb-5 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                            {selectedCountryData.info}
+                                        </p>
+
+                                        {/* Consular Information Section */}
+                                        {selectedCountryData.consulateInfo ? (
+                                            <div className={`mt-5 pt-4 border-t ${darkMode ? 'dark:border-gray-700' : 'border-gray-200'}`}>
+                                                <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Información Consular</h3>
+                                                <div className="space-y-3 text-sm">
+                                                    {/* Website Link */}
+                                                    {selectedCountryData.consulateInfo.website && (
+                                                        <div>
+                                                            <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Sitio Web:</span>
+                                                            <a href={selectedCountryData.consulateInfo.website} target="_blank" rel="noopener noreferrer" className={`ml-2 underline ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} transition-colors`}>
+                                                                Visitar sitio
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 ml-1 inline-block align-baseline"><path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z" clipRule="evenodd" /><path fillRule="evenodd" d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.19a.75.75 0 0 0-.053 1.06Z" clipRule="evenodd" /></svg>
+                                                            </a>
+                                                            {/* Link to find other consulates */}
+                                                            {selectedCountryData.consulateInfo.finderUrl && selectedCountryData.consulateInfo.finderUrl !== '#' && (
+                                                                <a href={selectedCountryData.consulateInfo.finderUrl} target="_blank" rel="noopener noreferrer" className={`ml-3 text-xs underline ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'} transition-colors`}>(Buscar otro consulado)</a>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {/* Phone Number */}
+                                                    {selectedCountryData.consulateInfo.phone && selectedCountryData.consulateInfo.phone !== 'N/A' && (
+                                                        <div><span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Teléfono:</span> <span className={`ml-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{selectedCountryData.consulateInfo.phone}</span></div>
+                                                    )}
+                                                    {/* Address (Example) */}
+                                                    {selectedCountryData.consulateInfo.address && selectedCountryData.consulateInfo.address !== 'N/A' && (
+                                                        <div><span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Dirección (Ejemplo):</span> <span className={`ml-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{selectedCountryData.consulateInfo.address}</span></div>
+                                                    )}
+                                                    {/* Common Procedures */}
+                                                    {selectedCountryData.consulateInfo.procedures && selectedCountryData.consulateInfo.procedures.length > 0 && (
+                                                        <div className="pt-2">
+                                                            <h4 className={`font-semibold mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Trámites Comunes:</h4>
+                                                            <ul className="list-disc list-inside pl-2 space-y-1">
+                                                                {selectedCountryData.consulateInfo.procedures.map((proc, idx) => (
+                                                                    <li key={idx}>
+                                                                        {/* Link to procedure if URL exists */}
+                                                                        {proc.url && proc.url !== '#' ? (
+                                                                            <a href={proc.url} target="_blank" rel="noopener noreferrer" className={`underline ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} transition-colors`}>
+                                                                                {proc.name}
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 ml-1 inline-block align-baseline"><path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z" clipRule="evenodd" /><path fillRule="evenodd" d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.19a.75.75 0 0 0-.053 1.06Z" clipRule="evenodd" /></svg>
+                                                                            </a>
+                                                                        ) : (
+                                                                            // Display name only if no URL
+                                                                            <span className={`${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{proc.name}</span>
+                                                                        )}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Message if no consular info available
+                                            <p className={`mt-4 text-sm italic ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Información consular detallada no disponible aún para este país.</p>
+                                        )}
+
+                                        {/* Close Button */}
+                                        <div className="text-right mt-8">
+                                            <motion.button
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                className="px-5 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg font-medium transition-colors text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800"
+                                                onClick={() => { setActiveModal(''); setSelectedCountryData(null); }} // Close modal and clear data
+                                            >
+                                                Cerrar
+                                            </motion.button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Help Modal Content */}
+                                {activeModal === 'help' && (
+                                    <>
+                                        <h2 className={`text-xl md:text-2xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Ayuda y Soporte ❓</h2>
+                                        <div className="space-y-5 text-base">
+                                            {/* Contact Section */}
+                                            <section>
+                                                <h3 className={`font-semibold mb-1.5 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Contacto</h3>
+                                                <p className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+                                                    Si tienes problemas técnicos o preguntas sobre la aplicación, contáctanos en: <a href="mailto:soporte.epicentrum@example.com" className="text-blue-500 dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300">soporte.epicentrum@example.com</a>
+                                                </p>
+                                            </section>
+                                            {/* How to Use Section */}
+                                            <section>
+                                                <h3 className={`font-semibold mb-1.5 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>¿Cómo usar la App?</h3>
+                                                <ul className={`list-disc list-inside space-y-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+                                                    <li><strong>Banderas (Arriba):</strong> Haz clic en una bandera para ver información consular básica del país.</li>
+                                                    <li><strong>Inicio:</strong> Explora temas populares en los carruseles. Haz clic en uno para ver detalles y enlaces.</li>
+                                                    <li><strong>Categorías (📚):</strong> Abre una lista completa de temas. Busca o selecciona uno.</li>
+                                                    <li><strong>SOS (🆘):</strong> Accede a opciones de emergencia rápidas (911, contacto SOS, traductor, etc.).</li>
+                                                    <li><strong>Asistente (💬):</strong> Chatea directamente para hacer preguntas específicas.</li>
+                                                    <li><strong>Perfil (👤):</strong> Guarda información básica (opcional) para personalizar la ayuda del asistente.</li>
+                                                    <li><strong>Menú (☰):</strong> Accede al historial del chat y opción para borrarlo.</li>
+                                                    <li><strong>Config (⚙️):</strong> Cambia el tema de color y el tono del chat.</li>
+                                                    <li><strong>Modo Noche (🌙/🌞):</strong> Cambia entre modo claro y oscuro.</li>
+                                                </ul>
+                                            </section>
+                                            {/* Privacy Section */}
+                                            <section>
+                                                <h3 className={`font-semibold mb-1.5 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Privacidad</h3>
+                                                <p className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+                                                    Tu historial de chat, perfil y contacto de emergencia se guardan <strong>únicamente en tu navegador</strong> (usando LocalStorage). No se envían a nuestros servidores a menos que interactúes con el Asistente (en cuyo caso, solo se envía la pregunta actual y el tono seleccionado).
+                                                </p>
+                                            </section>
+                                        </div>
+                                        {/* Close Button */}
+                                        <div className="text-right mt-8">
+                                            <motion.button
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                className="px-5 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg font-medium transition-colors text-base focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800"
+                                                onClick={() => setActiveModal('')}
+                                            >
+                                                Cerrar
+                                            </motion.button>
+                                        </div>
+                                    </>
+                                )}
+
+                            </motion.div> {/* End Modal Content */}
+                        </motion.div> // End Modal Backdrop
+                    )}
+                </AnimatePresence> {/* End Modal AnimatePresence */}
+
+                {/* --- Header Section --- */}
+                <header className={`w-full text-white shadow-md py-3 px-4 md:px-5 flex items-center justify-between sticky top-0 z-30 ${currentThemeHeaderBg}`}>
+                    {/* Left Sidebar Toggle Button */}
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="mr-3 text-white text-2xl p-1.5 rounded-md hover:bg-black/15 transition-colors focus:outline-none focus:ring-1 focus:ring-white/50"
+                        aria-label="Abrir historial de chat"
+                    >
+                        ☰
+                    </button>
+                    {/* App Title */}
+                    <h1 className="text-xl sm:text-2xl font-bold text-center flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                        Epicentrum Origin
+                    </h1>
+                    {/* Right Header Buttons */}
+                    <div className="flex items-center space-x-2 md:space-x-3">
+                        {/* Dark Mode Toggle Button */}
+                        <button
+                            onClick={() => setDarkMode(!darkMode)}
+                            className="text-2xl p-1.5 rounded-md hover:bg-black/15 transition-colors focus:outline-none focus:ring-1 focus:ring-white/50"
+                            aria-label={darkMode ? "Activar modo claro" : "Activar modo noche"}
+                        >
+                            {darkMode ? '🌞' : '🌙'}
+                        </button>
+                        {/* Config Modal Button */}
+                        <button
+                            onClick={() => { setProfileSaveMessage(''); setActiveModal('config'); }}
+                            className="text-2xl p-1.5 rounded-md hover:bg-black/15 transition-colors focus:outline-none focus:ring-1 focus:ring-white/50"
+                            aria-label="Abrir configuración"
+                        >
+                            ⚙️
+                        </button>
+                    </div>
+                </header>
+
+                {/* --- Flag Carousel Section --- */}
+                <FlagCarousel countries={latinAmericanCountries} onFlagClick={handleFlagClick} />
+
+                {/* --- Informative Phrases Carousel --- */}
+                {/* Only show phrases carousel if not on the assistant page */}
+                {currentPage !== 'asistente' && (
+                    <section className={`w-full border-b px-4 py-3.5 flex items-center justify-center shadow-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-yellow-100 border-yellow-200'}`}>
+                        <AnimatePresence mode="wait">
+                            {/* Animate phrase change */}
+                            <motion.p
+                                key={currentPhraseIndex}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.4 }}
+                                className={`text-sm md:text-base font-medium text-center ${darkMode ? 'text-gray-200' : 'text-yellow-900'}`}
+                            >
+                                {informativePhrases[currentPhraseIndex]}
+                            </motion.p>
+                        </AnimatePresence>
+                    </section>
+                )}
+
+                {/* --- Main Content Area --- */}
+                <main className="flex-1 w-full relative overflow-hidden">
+                    <AnimatePresence mode="wait">
+                        {/* Animate page transitions */}
+                        <motion.div
+                            key={currentPage}
+                            initial={{ opacity: 0, x: 30 }}
+                            animate={{ opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeInOut" } }}
+                            exit={{ opacity: 0, x: -30, transition: { duration: 0.2, ease: "easeInOut" } }}
+                            className="absolute inset-0 overflow-y-auto pb-20" // Allow scrolling, add padding for bottom nav
+                        >
+                            {renderCurrentPage()} {/* Render the active page component */}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+
+                {/* --- Settings/History Sidebar (Left) --- */}
+                <AnimatePresence>
+                    {sidebarOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <motion.div
+                                key="settings-sidebar-backdrop"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                                onClick={() => setSidebarOpen(false)} // Close on backdrop click
+                            />
+                            {/* Sidebar Content */}
+                            <motion.div
+                                key="settings-sidebar-content"
+                                initial={{ x: '-100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '-100%' }}
+                                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                                className={`fixed top-0 left-0 h-full w-64 md:w-72 shadow-xl z-50 flex flex-col ${darkMode ? 'bg-gray-850 border-r border-gray-700' : 'bg-white border-r border-gray-200'}`}
+                            >
+                                {/* Sidebar Header */}
+                                <div className={`flex items-center justify-between p-4 shadow-sm ${currentThemeHeaderBg} text-white`}>
+                                    <h2 className={`text-lg font-semibold text-white`}>Historial de Chat</h2>
+                                    <button onClick={() => setSidebarOpen(false)} className={`p-1.5 rounded-md text-white/80 hover:text-white hover:bg-black/20 transition-colors focus:outline-none focus:ring-1 focus:ring-white/50`} aria-label="Cerrar historial">✕</button>
+                                </div>
+                                {/* Chat History List */}
+                                <div className="flex-1 overflow-y-auto mt-2">
+                                    <ul className="space-y-1.5 px-3 pb-4">
+                                        {/* Filter out initial greeting if it's the only message */}
+                                        {chatHistory.filter((msg, idx) => !(idx === 0 && msg.content === initialAssistantGreeting)).length > 0 ? (
+                                            chatHistory
+                                                .filter((msg, idx) => !(idx === 0 && msg.content === initialAssistantGreeting))
+                                                .map((message, index) => (
+                                                    <li
+                                                        key={index}
+                                                        className={`p-2.5 rounded-md text-sm hover:bg-gray-200 dark:hover:bg-gray-700/60 transition-colors duration-150 cursor-pointer ${darkMode ? 'bg-gray-700/40' : 'bg-gray-100'}`}
+                                                        onClick={() => {
+                                                            // Placeholder: Could load this chat context or navigate
+                                                            console.log("Clicked history item:", message);
+                                                        }}
+                                                    >
+                                                        {/* Display user/assistant label */}
+                                                        <span className={`font-semibold ${message.type === 'user' ? 'text-blue-500 dark:text-blue-400' : (darkMode ? 'text-gray-300' : 'text-gray-600')}`}>
+                                                            {message.type === 'user' ? 'Tú: ' : 'Asistente: '}
+                                                        </span>
+                                                        {/* Display truncated message content */}
+                                                        {message.content.substring(0, 55)}{message.content.length > 55 ? '...' : ''}
+                                                    </li>
+                                                ))
+                                        ) : (
+                                            // Message if no history
+                                            <li className={`px-2 py-5 text-base text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                No hay historial aún.
+                                            </li>
+                                        )}
+                                    </ul>
+                                </div>
+                                {/* Clear History Button */}
+                                <div className="p-3 border-t dark:border-gray-700">
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm("¿Estás seguro de que quieres borrar todo el historial de chat?")) {
+                                                // Reset chat history to initial greeting
+                                                setChatHistory([{ type: 'assistant', label: 'Asistente', content: initialAssistantGreeting }]);
+                                                localStorage.removeItem('chatHistory'); // Clear from storage
+                                                setSidebarOpen(false); // Close sidebar
+                                            }
+                                        }}
+                                        className={`w-full text-center py-2 px-3 rounded-md text-sm font-medium transition-colors ${darkMode ? 'bg-red-800/50 hover:bg-red-800/80 text-red-200' : 'bg-red-100 hover:bg-red-200 text-red-700'} focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 dark:focus:ring-offset-gray-850`}
+                                    >
+                                        Borrar Historial
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+
+                {/* --- Category Sidebar --- */}
+                <CategorySidebar
+                    isOpen={isCategorySidebarOpen}
+                    onClose={() => setIsCategorySidebarOpen(false)}
+                    categories={categories}
+                    onCategoryClick={handleCategoryClick}
+                    darkMode={darkMode}
+                    themeColor={themeColor}
+                    themeHeaderBgClasses={themeHeaderBgClasses}
+                    setActiveModal={setActiveModal}
+                />
+
+                {/* --- Bottom Navigation Bar --- */}
+                <BottomNavigationBar
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                    openCategorySidebar={() => setIsCategorySidebarOpen(true)}
+                    darkMode={darkMode}
+                    themeColor={themeColor}
+                    setActiveModal={setActiveModal}
+                    setEmergencyModalView={setEmergencyModalView}
+                />
+
+            </motion.div> {/* End Main Container */}
+        </>
+    );
+}
